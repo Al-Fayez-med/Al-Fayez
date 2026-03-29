@@ -1,381 +1,254 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
+import os
+from google.oauth2 import service_account
+from google.cloud import firestore
 
-# ====================== Page Configuration ======================
-st.set_page_config(page_title="نظام إدارة المستودعات الطبية", page_icon="💊", layout="wide")
+# إعداد الصفحة
+st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
 
-# ====================== Session State Initialization ======================
-if 'products' not in st.session_state:
-    st.session_state.products = pd.DataFrame({
-        'code': ['MED-001', 'MED-002'],
-        'name': ['معقم كحولي', 'قفازات طبية'],
-        'description': ['معقم كحولي 70% - 500 مل', 'قفازات لاتكس معقمة مقاس M'],
-        'category': ['معقمات', 'مستلزمات تمريض'],
-        'price': [5.00, 8.50],
-        'currency': ['USD', 'USD'],
-        'price_syp': [25000, 42500],
-        'quantity': [50, 100],
-        'image': ['', ''],
-        'offer_text': ['', ''],
-        'gift_product': ['', ''],
-        'bundle_active': [False, False],
-        'bundle_main_product': ['', ''],
-        'bundle_ratio': ['', '']
-    })
+# ==================== إعداد الاتصال بـ Firebase ====================
+def init_firebase():
+    """تهيئة الاتصال بقاعدة البيانات"""
+    key_path = "firebase-key.json"
+    
+    if not os.path.exists(key_path):
+        st.error("❌ ملف المفتاح firebase-key.json غير موجود")
+        return None
+    
+    try:
+        with open(key_path, "r") as f:
+            key_info = json.load(f)
+        
+        credentials = service_account.Credentials.from_service_account_info(key_info)
+        db = firestore.Client(credentials=credentials, project=key_info["project_id"])
+        return db
+    except Exception as e:
+        st.error(f"❌ خطأ في الاتصال: {e}")
+        return None
 
-if 'exchange_rate' not in st.session_state:
-    st.session_state.exchange_rate = 15000
+# تهيئة قاعدة البيانات
+db = init_firebase()
 
-if 'show_offer_modal' not in st.session_state:
-    st.session_state.show_offer_modal = False
+# ==================== دوال مساعدة ====================
+def load_products():
+    """تحميل جميع المنتجات"""
+    if db is None:
+        return []
+    
+    try:
+        products_ref = db.collection("products")
+        docs = products_ref.stream()
+        
+        products = []
+        for doc in docs:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            products.append(data)
+        
+        return products
+    except Exception as e:
+        st.error(f"خطأ في التحميل: {e}")
+        return []
 
-if 'show_bundle_modal' not in st.session_state:
-    st.session_state.show_bundle_modal = False
+def save_product(product_data, product_id=None):
+    """حفظ منتج"""
+    if db is None:
+        return False
+    
+    try:
+        products_ref = db.collection("products")
+        if product_id:
+            products_ref.document(product_id).set(product_data, merge=True)
+        else:
+            products_ref.add(product_data)
+        return True
+    except Exception as e:
+        st.error(f"خطأ في الحفظ: {e}")
+        return False
 
-if 'current_product_idx' not in st.session_state:
-    st.session_state.current_product_idx = None
+def delete_product(product_id):
+    """حذف منتج"""
+    if db is None:
+        return False
+    
+    try:
+        db.collection("products").document(product_id).delete()
+        return True
+    except Exception as e:
+        st.error(f"خطأ في الحذف: {e}")
+        return False
 
-# ====================== Helper Functions ======================
-def generate_product_code():
-    """Generate a simple automatic product code"""
-    codes = st.session_state.products['code'].tolist()
-    if not codes:
+def load_settings():
+    """تحميل الإعدادات"""
+    if db is None:
+        return {"exchange_rate": 15000}
+    
+    try:
+        settings_ref = db.collection("settings").document("general")
+        doc = settings_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+        return {"exchange_rate": 15000}
+    except:
+        return {"exchange_rate": 15000}
+
+def save_settings(settings):
+    """حفظ الإعدادات"""
+    if db is None:
+        return False
+    
+    try:
+        db.collection("settings").document("general").set(settings, merge=True)
+        return True
+    except:
+        return False
+
+def generate_code():
+    """توليد كود تلقائي"""
+    products = load_products()
+    if not products:
         return "MED-001"
-    numbers = [int(c.split('-')[1]) for c in codes if c.startswith('MED-')]
-    last_num = max(numbers) if numbers else 0
-    return f"MED-{str(last_num + 1).zfill(3)}"
+    
+    codes = [p.get("code", "") for p in products if p.get("code", "").startswith("MED-")]
+    numbers = []
+    for code in codes:
+        try:
+            num = int(code.split("-")[1])
+            numbers.append(num)
+        except:
+            pass
+    
+    if numbers:
+        return f"MED-{str(max(numbers) + 1).zfill(3)}"
+    return "MED-001"
 
-def calculate_syp_price(price, currency, exchange_rate):
-    """Calculate price in Syrian Pounds"""
-    if currency == 'SYP':
+def calculate_syp(price, currency, rate):
+    """حساب السعر بالليرة"""
+    if currency == "SYP":
         return price
-    else:
-        return price * exchange_rate
+    return price * rate
 
-def add_new_product():
-    """Add a new empty product row"""
-    new_code = generate_product_code()
-    new_row = pd.DataFrame({
-        'code': [new_code],
-        'name': [''],
-        'description': [''],
-        'category': [''],
-        'price': [0.0],
-        'currency': ['SYP'],
-        'price_syp': [0.0],
-        'quantity': [0],
-        'image': [''],
-        'offer_text': [''],
-        'gift_product': [''],
-        'bundle_active': [False],
-        'bundle_main_product': [''],
-        'bundle_ratio': ['']
-    })
-    st.session_state.products = pd.concat([st.session_state.products, new_row], ignore_index=True)
+# ==================== تحميل البيانات الأولية ====================
+settings = load_settings()
+exchange_rate = settings.get("exchange_rate", 15000)
+products = load_products()
 
-def save_product(index):
-    """Save product data and update SYP price"""
-    currency = st.session_state.products.at[index, 'currency']
-    price = st.session_state.products.at[index, 'price']
-    st.session_state.products.at[index, 'price_syp'] = calculate_syp_price(price, currency, st.session_state.exchange_rate)
-
-def update_all_syp_prices():
-    """Update all products SYP prices based on current exchange rate"""
-    for idx in range(len(st.session_state.products)):
-        curr = st.session_state.products.at[idx, 'currency']
-        pr = st.session_state.products.at[idx, 'price']
-        st.session_state.products.at[idx, 'price_syp'] = calculate_syp_price(pr, curr, st.session_state.exchange_rate)
-
-# ====================== Page Header ======================
+# ==================== الواجهة الرئيسية ====================
 st.title("💊 نظام إدارة المستودعات الطبية")
-st.markdown("#### إدارة الأصناف - الأكسسوارات الطبية والصيدلانية")
 st.markdown("---")
 
-# ====================== Exchange Rate Section (Top of Page) ======================
+# سعر الصرف
 with st.container():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("### 💱 سعر صرف الدولار مقابل الليرة السورية")
+        st.markdown("### 💱 سعر صرف الدولار")
         rate_col1, rate_col2 = st.columns([3, 1])
         with rate_col1:
             new_rate = st.number_input(
-                "سعر الصرف",
-                min_value=1,
-                value=st.session_state.exchange_rate,
+                "السعر",
+                value=exchange_rate,
                 step=100,
                 format="%d",
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                key="rate_input"
             )
         with rate_col2:
             if st.button("تأكيد", key="confirm_rate_btn", use_container_width=True):
-                st.session_state.exchange_rate = new_rate
-                update_all_syp_prices()
-                st.success("✅ تم تحديث سعر الصرف وجميع الأسعار")
-        st.markdown("---")
-
-# ====================== Main Action Buttons ======================
-btn_col1, btn_col2, btn_col3, btn_col4 = st.columns([1, 1, 1, 1])
-with btn_col1:
-    if st.button("➕ إضافة صنف جديد", use_container_width=True, type="primary"):
-        add_new_product()
-        st.rerun()
-with btn_col2:
-    if st.button("💾 حفظ جميع التغييرات", use_container_width=True):
-        for idx in range(len(st.session_state.products)):
-            save_product(idx)
-        st.success("✅ تم حفظ جميع الأصناف")
-
+                save_settings({"exchange_rate": new_rate})
+                st.success("✅ تم تحديث سعر الصرف")
+                st.rerun()
 st.markdown("---")
 
-# ====================== Products Table (Editable) ======================
+# أزرار التحكم
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    if st.button("➕ إضافة صنف جديد", key="add_product_btn", use_container_width=True, type="primary"):
+        st.session_state.show_form = True
+with col_btn2:
+    if st.button("🔄 تحديث", key="refresh_btn", use_container_width=True):
+        st.rerun()
+
+# نموذج إضافة صنف جديد
+if st.session_state.get("show_form", False):
+    with st.expander("➕ إضافة صنف جديد", expanded=True):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            name = st.text_input("اسم الصنف", key="new_name")
+            desc = st.text_area("الوصف", height=80, key="new_desc")
+            category = st.text_input("المجموعة", key="new_category")
+        
+        with col2:
+            price = st.number_input("السعر", min_value=0.0, step=0.5, format="%.2f", key="new_price")
+            currency = st.selectbox("العملة", ["ليرة سورية", "دولار"], key="new_currency")
+            currency_code = "SYP" if currency == "ليرة سورية" else "USD"
+            quantity = st.number_input("الكمية", min_value=0, step=1, key="new_qty")
+        
+        # عرض السعر بالليرة
+        current_rate = new_rate if 'new_rate' in locals() else exchange_rate
+        syp_price = calculate_syp(price, currency_code, current_rate)
+        st.text_input("السعر بالليرة السورية", value=f"{syp_price:,.0f} ل.س", disabled=True, key="new_syp")
+        
+        col_save, col_cancel = st.columns(2)
+        with col_save:
+            if st.button("💾 حفظ", key="save_new_btn", use_container_width=True):
+                if name:
+                    new_code = generate_code()
+                    product_data = {
+                        "code": new_code,
+                        "name": name,
+                        "description": desc,
+                        "category": category,
+                        "price": price,
+                        "currency": currency_code,
+                        "price_syp": syp_price,
+                        "quantity": quantity,
+                        "created_at": datetime.now().isoformat()
+                    }
+                    if save_product(product_data):
+                        st.success(f"✅ تم إضافة {name}")
+                        st.session_state.show_form = False
+                        st.rerun()
+                else:
+                    st.warning("⚠️ يرجى إدخال اسم الصنف")
+        
+        with col_cancel:
+            if st.button("إلغاء", key="cancel_new_btn", use_container_width=True):
+                st.session_state.show_form = False
+                st.rerun()
+
+# عرض قائمة الأصناف
 st.subheader("📋 قائمة الأصناف")
 
-# Display each product row
-for idx, row in st.session_state.products.iterrows():
-    with st.container():
-        st.markdown(f"##### 🔹 الصنف رقم {idx + 1} - الكود: `{row['code']}`")
-        
-        # Create columns for better layout
-        col_left, col_mid, col_right = st.columns([2, 2, 1])
-        
-        with col_left:
-            # Product Name
-            new_name = st.text_input(
-                "اسم الصنف",
-                value=row['name'],
-                key=f"name_{idx}",
-                placeholder="أدخل اسم المنتج"
-            )
+if not products:
+    st.info("لا توجد أصناف. اضغط على إضافة صنف جديد")
+else:
+    for idx, product in enumerate(products):
+        with st.container():
+            col1, col2, col3 = st.columns([2, 2, 1])
             
-            # Description
-            new_desc = st.text_area(
-                "الوصف",
-                value=row['description'],
-                key=f"desc_{idx}",
-                height=80,
-                placeholder="وصف تفصيلي للمنتج..."
-            )
+            with col1:
+                st.markdown(f"**{product.get('name', 'بدون اسم')}**")
+                st.caption(f"الكود: {product.get('code', '')}")
+                st.caption(f"المجموعة: {product.get('category', '')}")
             
-            # Category
-            new_category = st.text_input(
-                "المجموعة",
-                value=row['category'],
-                key=f"cat_{idx}",
-                placeholder="مثال: معقمات / أدوات جراحية / مستلزمات تمريض"
-            )
-        
-        with col_mid:
-            # Price and Currency
-            price_col, currency_col = st.columns(2)
-            with price_col:
-                new_price = st.number_input(
-                    "السعر",
-                    value=float(row['price']),
-                    step=0.5,
-                    format="%.2f",
-                    key=f"price_{idx}"
-                )
-            with currency_col:
-                currency_options = {'ليرة سورية': 'SYP', 'دولار أمريكي': 'USD'}
-                currency_labels = ['ليرة سورية', 'دولار أمريكي']
-                current_currency_label = [k for k, v in currency_options.items() if v == row['currency']]
-                current_idx = 0 if current_currency_label[0] == 'ليرة سورية' else 1 if current_currency_label else 0
-                new_currency_label = st.selectbox(
-                    "العملة",
-                    options=currency_labels,
-                    index=current_idx,
-                    key=f"curr_{idx}"
-                )
-                new_currency = currency_options[new_currency_label]
+            with col2:
+                st.write(f"السعر: {product.get('price', 0)}")
+                currency_display = "ليرة" if product.get('currency') == "SYP" else "دولار"
+                st.write(f"العملة: {currency_display}")
+                st.write(f"الكمية: {product.get('quantity', 0)}")
+                st.write(f"السعر بالليرة: {product.get('price_syp', 0):,.0f} ل.س")
             
-            # SYP Price Display
-            calculated_syp = calculate_syp_price(new_price, new_currency, st.session_state.exchange_rate)
-            if new_currency == 'SYP':
-                st.text_input(
-                    "السعر بالليرة السورية",
-                    value=f"{calculated_syp:,.0f} ل.س",
-                    key=f"syp_{idx}",
-                    disabled=True
-                )
-                st.caption("🔒 السعر بالليرة السورية (ثابت - اللون الباهت يشير إلى عدم التغيير)")
-            else:
-                st.text_input(
-                    "السعر بالليرة السورية",
-                    value=f"{calculated_syp:,.0f} ل.س",
-                    key=f"syp_calc_{idx}",
-                    disabled=True
-                )
-                st.caption("💱 تم الحساب تلقائياً حسب سعر الصرف")
+            with col3:
+                if st.button("🗑️ حذف", key=f"del_btn_{product.get('id')}_{idx}", use_container_width=True):
+                    if delete_product(product.get('id')):
+                        st.success("تم الحذف")
+                        st.rerun()
             
-            # Quantity
-            new_qty = st.number_input(
-                "الكمية المتوفرة",
-                value=int(row['quantity']),
-                step=1,
-                key=f"qty_{idx}"
-            )
-        
-        with col_right:
-            # Image Preview
-            st.markdown("**🖼️ معاينة الصورة**")
-            uploaded_image = st.file_uploader(
-                "رفع صورة المنتج",
-                type=["png", "jpg", "jpeg", "webp"],
-                key=f"img_{idx}",
-                label_visibility="collapsed"
-            )
-            if uploaded_image is not None:
-                st.image(uploaded_image, width=120, caption="معاينة")
-                st.caption("✅ تم رفع الصورة")
-            elif row['image']:
-                st.info("صورة موجودة مسبقاً")
-            else:
-                st.caption("📷 لم يتم رفع صورة بعد")
-        
-        # Buttons for Offers and Bundles
-        st.markdown("---")
-        btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 2])
-        
-        with btn_col1:
-            if st.button("🎯 عروض", key=f"offer_btn_{idx}", use_container_width=True):
-                st.session_state.show_offer_modal = True
-                st.session_state.current_product_idx = idx
-        
-        with btn_col2:
-            if st.button("📦 تحميل", key=f"bundle_btn_{idx}", use_container_width=True):
-                st.session_state.show_bundle_modal = True
-                st.session_state.current_product_idx = idx
-        
-        with btn_col3:
-            if st.button("💾 حفظ هذا الصنف", key=f"save_{idx}", use_container_width=True):
-                # Update DataFrame with current values
-                st.session_state.products.at[idx, 'name'] = new_name
-                st.session_state.products.at[idx, 'description'] = new_desc
-                st.session_state.products.at[idx, 'category'] = new_category
-                st.session_state.products.at[idx, 'price'] = new_price
-                st.session_state.products.at[idx, 'currency'] = new_currency
-                st.session_state.products.at[idx, 'quantity'] = new_qty
-                save_product(idx)
-                st.success(f"✅ تم حفظ {new_name or 'الصنف'} بنجاح")
-                st.rerun()
-        
-        st.markdown("---")
+            st.markdown("---")
 
-# ====================== Offer Modal (Popup) ======================
-if st.session_state.show_offer_modal and st.session_state.current_product_idx is not None:
-    idx = st.session_state.current_product_idx
-    product_name = st.session_state.products.at[idx, 'name'] or "هذا الصنف"
-    
-    with st.expander(f"🎯 إعداد العرض لـ {product_name}", expanded=True):
-        st.markdown("### إضافة عرض أو هدية")
-        
-        offer_text = st.text_area(
-            "نص العرض",
-            value=st.session_state.products.at[idx, 'offer_text'],
-            key="offer_text_input",
-            placeholder="مثال: اشتري 4 قطع واحصل على قطعة مجانية",
-            height=80
-        )
-        
-        st.markdown("#### 🎁 إرفاق منتج هدية (اختياري)")
-        
-        # Get list of other products for gift
-        other_products = []
-        for i, row in st.session_state.products.iterrows():
-            if i != idx and row['name']:
-                other_products.append(f"{row['code']} - {row['name']}")
-        
-        gift_product = st.selectbox(
-            "اختر المنتج الهدية",
-            options=["لا يوجد"] + other_products,
-            key="gift_select"
-        )
-        
-        col_ok, col_cancel = st.columns(2)
-        with col_ok:
-            if st.button("✅ تأكيد العرض", use_container_width=True):
-                st.session_state.products.at[idx, 'offer_text'] = offer_text
-                if gift_product != "لا يوجد":
-                    st.session_state.products.at[idx, 'gift_product'] = gift_product
-                else:
-                    st.session_state.products.at[idx, 'gift_product'] = ''
-                st.success("✅ تم حفظ العرض بنجاح")
-                st.session_state.show_offer_modal = False
-                st.session_state.current_product_idx = None
-                st.rerun()
-        
-        with col_cancel:
-            if st.button("❌ إلغاء", use_container_width=True):
-                st.session_state.show_offer_modal = False
-                st.session_state.current_product_idx = None
-                st.rerun()
-
-# ====================== Bundle Modal (Popup) ======================
-if st.session_state.show_bundle_modal and st.session_state.current_product_idx is not None:
-    idx = st.session_state.current_product_idx
-    product_name = st.session_state.products.at[idx, 'name'] or "هذا الصنف"
-    
-    with st.expander(f"📦 إعداد التحميل (ربط منتج كاسد) لـ {product_name}", expanded=True):
-        st.markdown("### ربط منتج كاسد بمنتج رائج")
-        
-        # First field: ratio from current product
-        st.markdown("#### من هذا المنتج (الرائج)")
-        bundle_ratio = st.text_input(
-            "العدد المطلوب من هذا المنتج",
-            value=st.session_state.products.at[idx, 'bundle_ratio'],
-            key="bundle_ratio_input",
-            placeholder="مثال: 4 (يعني كل 4 قطع من هذا المنتج)",
-            help="أدخل العدد المطلوب من هذا المنتج لتفعيل التحميل"
-        )
-        
-        st.markdown("#### المنتج المحمَّل (الكاسد)")
-        
-        # Get list of other products for bundle
-        other_products = []
-        for i, row in st.session_state.products.iterrows():
-            if i != idx and row['name']:
-                other_products.append(f"{row['code']} - {row['name']}")
-        
-        bundle_product = st.selectbox(
-            "اختر المنتج المحمَّل",
-            options=["لا يوجد"] + other_products,
-            key="bundle_select",
-            help="المنتج الذي سيتم إضافته إجبارياً للفاتورة"
-        )
-        
-        st.markdown("#### كمية المنتج المحمَّل")
-        bundle_qty = st.number_input(
-            "الكمية التي تضاف للفاتورة",
-            min_value=1,
-            value=1,
-            step=1,
-            key="bundle_qty",
-            help="مثال: 1 (يعني تضاف وحدة واحدة من المنتج الكاسد)"
-        )
-        
-        col_ok, col_cancel = st.columns(2)
-        with col_ok:
-            if st.button("✅ تأكيد التحميل", use_container_width=True):
-                if bundle_product != "لا يوجد" and bundle_ratio:
-                    st.session_state.products.at[idx, 'bundle_active'] = True
-                    st.session_state.products.at[idx, 'bundle_main_product'] = bundle_product
-                    st.session_state.products.at[idx, 'bundle_ratio'] = bundle_ratio
-                    st.session_state.products.at[idx, 'bundle_qty'] = bundle_qty
-                    st.success(f"✅ تم ربط {product_name} بـ {bundle_product} بنسبة {bundle_ratio}:{bundle_qty}")
-                else:
-                    st.warning("⚠️ يرجى اختيار المنتج المحمَّل وتحديد النسبة")
-                    st.stop()
-                st.session_state.show_bundle_modal = False
-                st.session_state.current_product_idx = None
-                st.rerun()
-        
-        with col_cancel:
-            if st.button("❌ إلغاء", use_container_width=True):
-                st.session_state.show_bundle_modal = False
-                st.session_state.current_product_idx = None
-                st.rerun()
-
-# ====================== Footer ======================
-st.markdown("---")
-st.caption("© نظام إدارة المستودعات الطبية | جميع الحقوق محفوظة")
+# تذييل
+st.caption("© نظام إدارة المستودعات الطبية")
