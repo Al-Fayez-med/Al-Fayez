@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
+import json
 
 # إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
@@ -12,7 +13,8 @@ st.set_page_config(page_title="نظام إدارة المستودعات", page_i
 def init_firebase():
     try:
         if not firebase_admin._apps:
-            cred = credentials.Certificate("firebase-key.json")
+            key_dict = json.loads(st.secrets["firebase_key"])
+            cred = credentials.Certificate(key_dict)
             firebase_admin.initialize_app(cred)
 
         return firestore.client()
