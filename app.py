@@ -10,21 +10,17 @@ st.set_page_config(page_title="نظام إدارة المستودعات", page_i
 # ==================== الاتصال بـ Firebase ====================
 @st.cache_resource
 def init_firebase():
-    st.write("🔄 جاري الاتصال بـ Firebase...")
-
     try:
         if not firebase_admin._apps:
-            cred = credentials.Certificate(st.secrets["firebase"])
+            cred = credentials.Certificate("firebase-key.json")
             firebase_admin.initialize_app(cred)
 
-        st.write("✅ تم الاتصال بـ Firebase")
         return firestore.client()
 
     except Exception as e:
         st.error(f"❌ خطأ في الاتصال: {e}")
         return None
 
-st.write("🚀 بدء تشغيل التطبيق...")
 db = init_firebase()
 
 # ==================== دوال ====================
@@ -35,8 +31,7 @@ def load_products():
     try:
         docs = db.collection("products").stream()
         return [{**doc.to_dict(), "id": doc.id} for doc in docs]
-    except Exception as e:
-        st.error(f"خطأ في تحميل المنتجات: {e}")
+    except:
         return []
 
 def save_product(data):
@@ -45,8 +40,7 @@ def save_product(data):
     try:
         db.collection("products").add(data)
         return True
-    except Exception as e:
-        st.error(f"خطأ في الحفظ: {e}")
+    except:
         return False
 
 def delete_product(product_id):
@@ -55,27 +49,19 @@ def delete_product(product_id):
     try:
         db.collection("products").document(product_id).delete()
         return True
-    except Exception as e:
-        st.error(f"خطأ في الحذف: {e}")
+    except:
         return False
 
 def load_settings():
     if db is None:
         return {"exchange_rate": 15000}
-    try:
-        doc = db.collection("settings").document("general").get()
-        return doc.to_dict() if doc.exists else {"exchange_rate": 15000}
-    except Exception as e:
-        st.error(f"خطأ في تحميل الإعدادات: {e}")
-        return {"exchange_rate": 15000}
+    doc = db.collection("settings").document("general").get()
+    return doc.to_dict() if doc.exists else {"exchange_rate": 15000}
 
 def save_settings(data):
     if db is None:
         return
-    try:
-        db.collection("settings").document("general").set(data)
-    except Exception as e:
-        st.error(f"خطأ في حفظ الإعدادات: {e}")
+    db.collection("settings").document("general").set(data)
 
 def calculate_syp(price, currency, rate):
     return price if currency == "SYP" else price * rate
