@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
-import json
+
 
 # إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
@@ -14,8 +14,7 @@ def init_firebase():
     try:
         if not firebase_admin._apps:
             # ✅ الحل هنا (تم الإصلاح)
-            key_info = json.loads(st.secrets["firebase"])
-            cred = credentials.Certificate(key_info)
+            cred = credentials.Certificate(st.secrets["firebase"])
             firebase_admin.initialize_app(cred)
 
         return firestore.client()
