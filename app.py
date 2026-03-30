@@ -22,7 +22,7 @@ def init_firebase():
     except Exception as e:
         st.error(f"❌ خطأ في الاتصال: {e}")
         return None
-
+st.write("🚀 بدء تشغيل التطبيق...")
 db = init_firebase()
 
 # ==================== دوال ====================
