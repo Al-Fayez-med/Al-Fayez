@@ -9,39 +9,24 @@ st.set_page_config(page_title="نظام إدارة المستودعات", page_i
 # ==================== Firebase ====================
 @st.cache_resource
 def init_firebase():
-    try:
-        if not firebase_admin._apps:
-            key_dict = json.loads(st.secrets["firebase_key"])
-            cred = credentials.Certificate(key_dict)
-            firebase_admin.initialize_app(cred)
-        return firestore.client()
-    except Exception as e:
-        st.error(f"❌ خطأ في الاتصال: {e}")
-        return None
+    if not firebase_admin._apps:
+        key_dict = json.loads(st.secrets["firebase_key"])
+        cred = credentials.Certificate(key_dict)
+        firebase_admin.initialize_app(cred)
+    return firestore.client()
 
 db = init_firebase()
 
 # ==================== دوال ====================
 def load_products():
-    try:
-        docs = db.collection("products").stream()
-        return [{**doc.to_dict(), "id": doc.id} for doc in docs]
-    except:
-        return []
+    docs = db.collection("products").stream()
+    return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
 def save_product(data):
-    try:
-        db.collection("products").add(data)
-        return True
-    except:
-        return False
+    db.collection("products").add(data)
 
 def delete_product(product_id):
-    try:
-        db.collection("products").document(product_id).delete()
-        return True
-    except:
-        return False
+    db.collection("products").document(product_id).delete()
 
 def load_settings():
     doc = db.collection("settings").document("general").get()
@@ -97,11 +82,12 @@ if st.session_state.get("show_form", False):
     quantity = st.number_input("الكمية", min_value=0)
 
     syp_price = calculate_syp(price, currency_code, new_rate)
+
     st.text_input("السعر بالليرة", value=f"{syp_price:,.0f}", disabled=True)
 
-    col_save, col_cancel = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with col_save:
+    with col1:
         if st.button("💾 حفظ"):
             if name:
                 data = {
@@ -110,19 +96,17 @@ if st.session_state.get("show_form", False):
                     "category": category,
                     "price": price,
                     "currency": currency_code,
-                    "price_syp": syp_price,
                     "quantity": quantity,
                     "created_at": datetime.now().isoformat()
                 }
-
-                if save_product(data):
-                    st.success("تم الحفظ")
-                    st.session_state.show_form = False
-                    st.rerun()
+                save_product(data)
+                st.success("تم الحفظ")
+                st.session_state.show_form = False
+                st.rerun()
             else:
                 st.warning("أدخل اسم الصنف")
 
-    with col_cancel:
+    with col2:
         if st.button("❌ إلغاء"):
             st.session_state.show_form = False
             st.rerun()
@@ -136,31 +120,44 @@ else:
     for p in products:
         col1, col2, col3 = st.columns([2,2,1])
 
+        currency = p.get("currency", "SYP")
+        price = p.get("price", 0)
+        quantity = p.get("quantity", 0)
+
+        syp_price = calculate_syp(price, currency, exchange_rate)
+
         with col1:
             st.markdown(f"**{p.get('name','')}**")
             st.caption(p.get("category",""))
 
         with col2:
-            st.write(f"السعر: {p.get('price',0)}")
-            st.write(f"الكمية: {p.get('quantity',0)}")
-            st.write(f"بالليرة: {p.get('price_syp',0):,.0f}")
+            if currency == "USD":
+                st.write(f"💵 {price} USD")
+                st.markdown(f"<span style='color:gray'>≈ {syp_price:,.0f} ل.س</span>", unsafe_allow_html=True)
+            else:
+                st.write(f"{price:,.0f} ل.س")
+
+            st.write(f"الكمية: {quantity}")
 
         with col3:
             if st.button("🗑️ حذف", key=p["id"]):
-                st.session_state[f"confirm_{p['id']}"] = True
+                st.session_state["delete_id"] = p["id"]
 
-        if st.session_state.get(f"confirm_{p['id']}", False):
+        # تأكيد حذف (محسّن)
+        if st.session_state.get("delete_id") == p["id"]:
             st.warning("هل أنت متأكد من الحذف؟")
-            col_yes, col_no = st.columns(2)
+            c1, c2 = st.columns(2)
 
-            with col_yes:
+            with c1:
                 if st.button("نعم", key=f"yes_{p['id']}"):
                     delete_product(p["id"])
+                    st.session_state["delete_id"] = None
                     st.rerun()
 
-            with col_no:
+            with c2:
                 if st.button("إلغاء", key=f"no_{p['id']}"):
-                    st.session_state[f"confirm_{p['id']}"] = False
+                    st.session_state["delete_id"] = None
+                    st.rerun()
 
         st.markdown("---")
 
