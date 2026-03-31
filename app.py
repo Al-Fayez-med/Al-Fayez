@@ -1,14 +1,12 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 
-# إعداد الصفحة
 st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
 
-# ==================== الاتصال بـ Firebase ====================
+# ==================== Firebase ====================
 @st.cache_resource
 def init_firebase():
     try:
@@ -16,9 +14,7 @@ def init_firebase():
             key_dict = json.loads(st.secrets["firebase_key"])
             cred = credentials.Certificate(key_dict)
             firebase_admin.initialize_app(cred)
-
         return firestore.client()
-
     except Exception as e:
         st.error(f"❌ خطأ في الاتصال: {e}")
         return None
@@ -26,10 +22,7 @@ def init_firebase():
 db = init_firebase()
 
 # ==================== دوال ====================
-
 def load_products():
-    if db is None:
-        return []
     try:
         docs = db.collection("products").stream()
         return [{**doc.to_dict(), "id": doc.id} for doc in docs]
@@ -37,8 +30,6 @@ def load_products():
         return []
 
 def save_product(data):
-    if db is None:
-        return False
     try:
         db.collection("products").add(data)
         return True
@@ -46,8 +37,6 @@ def save_product(data):
         return False
 
 def delete_product(product_id):
-    if db is None:
-        return False
     try:
         db.collection("products").document(product_id).delete()
         return True
@@ -55,25 +44,21 @@ def delete_product(product_id):
         return False
 
 def load_settings():
-    if db is None:
-        return {"exchange_rate": 15000}
     doc = db.collection("settings").document("general").get()
     return doc.to_dict() if doc.exists else {"exchange_rate": 15000}
 
 def save_settings(data):
-    if db is None:
-        return
     db.collection("settings").document("general").set(data)
 
 def calculate_syp(price, currency, rate):
     return price if currency == "SYP" else price * rate
 
-# ==================== تحميل البيانات ====================
+# ==================== بيانات ====================
 settings = load_settings()
 exchange_rate = settings.get("exchange_rate", 15000)
 products = load_products()
 
-# ==================== الواجهة ====================
+# ==================== UI ====================
 st.title("💊 نظام إدارة المستودعات الطبية")
 st.markdown("---")
 
@@ -96,7 +81,7 @@ st.markdown("---")
 if st.button("➕ إضافة صنف جديد"):
     st.session_state.show_form = True
 
-# نموذج إضافة
+# ==================== نموذج ====================
 if st.session_state.get("show_form", False):
 
     st.subheader("إضافة صنف")
@@ -114,27 +99,35 @@ if st.session_state.get("show_form", False):
     syp_price = calculate_syp(price, currency_code, new_rate)
     st.text_input("السعر بالليرة", value=f"{syp_price:,.0f}", disabled=True)
 
-    if st.button("💾 حفظ"):
-        if name:
-            data = {
-                "name": name,
-                "description": desc,
-                "category": category,
-                "price": price,
-                "currency": currency_code,
-                "price_syp": syp_price,
-                "quantity": quantity,
-                "created_at": datetime.now().isoformat()
-            }
+    col_save, col_cancel = st.columns(2)
 
-            if save_product(data):
-                st.success("تم الحفظ")
-                st.session_state.show_form = False
-                st.rerun()
-        else:
-            st.warning("أدخل اسم الصنف")
+    with col_save:
+        if st.button("💾 حفظ"):
+            if name:
+                data = {
+                    "name": name,
+                    "description": desc,
+                    "category": category,
+                    "price": price,
+                    "currency": currency_code,
+                    "price_syp": syp_price,
+                    "quantity": quantity,
+                    "created_at": datetime.now().isoformat()
+                }
 
-# ==================== عرض الأصناف ====================
+                if save_product(data):
+                    st.success("تم الحفظ")
+                    st.session_state.show_form = False
+                    st.rerun()
+            else:
+                st.warning("أدخل اسم الصنف")
+
+    with col_cancel:
+        if st.button("❌ إلغاء"):
+            st.session_state.show_form = False
+            st.rerun()
+
+# ==================== عرض ====================
 st.subheader("📋 قائمة الأصناف")
 
 if not products:
@@ -154,8 +147,20 @@ else:
 
         with col3:
             if st.button("🗑️ حذف", key=p["id"]):
-                delete_product(p["id"])
-                st.rerun()
+                st.session_state[f"confirm_{p['id']}"] = True
+
+        if st.session_state.get(f"confirm_{p['id']}", False):
+            st.warning("هل أنت متأكد من الحذف؟")
+            col_yes, col_no = st.columns(2)
+
+            with col_yes:
+                if st.button("نعم", key=f"yes_{p['id']}"):
+                    delete_product(p["id"])
+                    st.rerun()
+
+            with col_no:
+                if st.button("إلغاء", key=f"no_{p['id']}"):
+                    st.session_state[f"confirm_{p['id']}"] = False
 
         st.markdown("---")
 
