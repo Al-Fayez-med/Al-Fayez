@@ -61,7 +61,6 @@ with col1:
 with col2:
     if st.button("تأكيد"):
         save_settings({"exchange_rate": new_rate})
-        st.success("تم تحديث السعر")
         st.rerun()
 
 st.markdown("---")
@@ -69,19 +68,18 @@ st.markdown("---")
 # زر إضافة
 if st.button("➕ إضافة صنف جديد"):
     st.session_state.edit_id = None
+    st.session_state.delete_id = None
     st.session_state.show_form = True
+    st.rerun()
 
 # ================= نموذج =================
 if st.session_state.get("show_form", False):
 
     editing = st.session_state.get("edit_id")
 
-    if editing:
-        product = next((p for p in products if p["id"] == editing), {})
-        st.subheader("✏️ تعديل صنف")
-    else:
-        product = {}
-        st.subheader("➕ إضافة صنف")
+    product = next((p for p in products if p["id"] == editing), {}) if editing else {}
+
+    st.subheader("✏️ تعديل صنف" if editing else "➕ إضافة صنف")
 
     name = st.text_input("اسم الصنف", value=product.get("name",""))
     desc = st.text_area("الوصف", value=product.get("description",""))
@@ -117,18 +115,14 @@ if st.session_state.get("show_form", False):
 
                 if editing:
                     update_product(editing, data)
-                    st.success("تم التعديل بنجاح ✅")
                 else:
                     data["created_at"] = datetime.now().isoformat()
                     save_product(data)
-                    st.success("تمت الإضافة بنجاح ✅")
 
-                st.cache_data.clear()  # 🔥 مهم
+                st.cache_data.clear()
                 st.session_state.show_form = False
                 st.session_state.edit_id = None
                 st.rerun()
-            else:
-                st.warning("أدخل اسم الصنف")
 
     with col2:
         if st.button("❌ إلغاء"):
@@ -163,10 +157,15 @@ for p in products:
     with col3:
         if st.button("✏️ تعديل", key=f"edit_{p['id']}"):
             st.session_state.edit_id = p["id"]
+            st.session_state.delete_id = None
             st.session_state.show_form = True
+            st.rerun()
 
         if st.button("🗑️ حذف", key=f"del_{p['id']}"):
             st.session_state.delete_id = p["id"]
+            st.session_state.edit_id = None
+            st.session_state.show_form = False
+            st.rerun()
 
     if st.session_state.get("delete_id") == p["id"]:
         st.warning("تأكيد الحذف؟")
@@ -175,7 +174,7 @@ for p in products:
         with c1:
             if st.button("نعم", key=f"yes_{p['id']}"):
                 delete_product(p["id"])
-                st.cache_data.clear()  # 🔥 مهم
+                st.cache_data.clear()
                 st.session_state.delete_id = None
                 st.rerun()
 
