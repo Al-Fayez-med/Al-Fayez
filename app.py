@@ -202,7 +202,19 @@ if page == "📦 الأصناف":
             st.write(f"📂 {get_category_name(p.get('category_code'))}")
 
         with col2:
-            st.write(f"{p.get('price')} {p.get('currency')}")
+           price = p.get("price", 0)
+currency = p.get("currency", "SYP")
+
+# جلب سعر الصرف
+settings = db.collection("settings").document("general").get()
+exchange_rate = settings.to_dict().get("exchange_rate",15000) if settings.exists else 15000
+
+if currency == "USD":
+    syp_price = price * exchange_rate
+    st.write(f"💵 {price} USD")
+    st.markdown(f"<span style='color:gray'>≈ {syp_price:,.0f} ل.س</span>", unsafe_allow_html=True)
+else:
+    st.write(f"{price:,.0f} ل.س")
             st.write(f"📦 {p.get('quantity')}")
 
         with col3:
