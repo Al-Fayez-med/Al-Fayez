@@ -54,14 +54,7 @@ page = st.sidebar.radio("📂 التنقل", ["📦 الأصناف", "🗂️ ا
 if page == "🗂️ المجموعات":
 
     st.title("🗂️ إدارة المجموعات")
-if st.button("🔥 حذف كل الأصناف (مؤقت)"):
-    docs = db.collection("products").stream()
-    for doc in docs:
-        db.collection("products").document(doc.id).delete()
 
-    st.cache_data.clear()
-    st.success("تم حذف كل الأصناف")
-    st.rerun()
     # إضافة
     st.subheader("➕ إضافة مجموعة")
     name = st.text_input("اسم المجموعة")
