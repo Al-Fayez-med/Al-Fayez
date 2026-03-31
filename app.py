@@ -18,6 +18,7 @@ def init_firebase():
 db = init_firebase()
 
 # ================= دوال =================
+@st.cache_data
 def load_products():
     docs = db.collection("products").stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
@@ -122,6 +123,7 @@ if st.session_state.get("show_form", False):
                     save_product(data)
                     st.success("تمت الإضافة بنجاح ✅")
 
+                st.cache_data.clear()  # 🔥 مهم
                 st.session_state.show_form = False
                 st.session_state.edit_id = None
                 st.rerun()
@@ -173,6 +175,7 @@ for p in products:
         with c1:
             if st.button("نعم", key=f"yes_{p['id']}"):
                 delete_product(p["id"])
+                st.cache_data.clear()  # 🔥 مهم
                 st.session_state.delete_id = None
                 st.rerun()
 
