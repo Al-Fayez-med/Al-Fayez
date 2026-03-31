@@ -44,8 +44,7 @@ def generate_product_code(category_code):
     return f"{category_code}{str(max_code + 1).zfill(3)}"
 
 def get_category_name(code):
-    cats = load_categories()
-    for c in cats:
+    for c in load_categories():
         if c["code"] == code:
             return c["name"]
     return ""
@@ -60,7 +59,7 @@ if page == "🗂️ المجموعات":
 
     name = st.text_input("اسم المجموعة")
 
-    if st.button("➕ إضافة"):
+    if st.button("➕ إضافة مجموعة"):
         if name:
             code = generate_category_code()
             db.collection("categories").add({"name": name, "code": code})
@@ -69,9 +68,7 @@ if page == "🗂️ المجموعات":
 
     st.markdown("---")
 
-    categories = load_categories()
-
-    for c in categories:
+    for c in load_categories():
         st.write(f"{c['code']} - {c['name']}")
 
 # ================= Products =================
@@ -94,19 +91,19 @@ if page == "📦 الأصناف":
 
     st.markdown("---")
 
-    # إضافة صنف
+    # زر إضافة
     if st.button("➕ إضافة صنف"):
-        st.session_state.add = True
-        st.session_state.edit = None
+        st.session_state.mode = "add"
+        st.session_state.edit_id = None
         st.rerun()
 
-    # نموذج
-    if st.session_state.get("add"):
+    # ================= FORM =================
+    if st.session_state.get("mode") in ["add", "edit"]:
 
-        editing = st.session_state.get("edit")
+        editing = st.session_state.get("edit_id")
         product = next((p for p in products if p["id"] == editing), {}) if editing else {}
 
-        st.subheader("➕ إضافة / تعديل صنف")
+        st.subheader("✏️ تعديل صنف" if editing else "➕ إضافة صنف")
 
         name = st.text_input("الاسم", value=product.get("name",""))
         desc = st.text_area("الوصف", value=product.get("description",""))
@@ -140,31 +137,27 @@ if page == "📦 الأصناف":
                 if editing:
                     db.collection("products").document(editing).update(data)
                 else:
-                    code = generate_product_code(category_code)
-                    data["code"] = code
+                    data["code"] = generate_product_code(category_code)
                     data["created_at"] = datetime.now().isoformat()
                     db.collection("products").add(data)
 
                 st.cache_data.clear()
-                st.session_state.add = False
-                st.session_state.edit = None
+                st.session_state.mode = None
+                st.session_state.edit_id = None
                 st.rerun()
 
         with col2:
             if st.button("❌ إلغاء"):
-                st.session_state.add = False
-                st.session_state.edit = None
+                st.session_state.mode = None
+                st.session_state.edit_id = None
                 st.rerun()
 
     st.markdown("---")
 
-    # عرض الأصناف
+    # ================= LIST =================
     for p in products:
 
         col1, col2, col3 = st.columns([3,2,1])
-
-        price = p.get("price", 0)
-        currency = p.get("currency", "SYP")
 
         with col1:
             st.markdown(f"### {p.get('name')}")
@@ -172,20 +165,25 @@ if page == "📦 الأصناف":
             st.write(f"📂 {get_category_name(p.get('category_code'))}")
 
         with col2:
+            price = p.get("price", 0)
+            currency = p.get("currency", "SYP")
+
             if currency == "USD":
-                syp_price = price * exchange_rate
+                syp = price * exchange_rate
                 st.write(f"💵 {price} USD")
-                st.markdown(
-                    f"<span style='color:gray'>≈ {syp_price:,.0f} ل.س</span>",
-                    unsafe_allow_html=True
-                )
+                st.markdown(f"<span style='color:gray'>≈ {syp:,.0f} ل.س</span>", unsafe_allow_html=True)
             else:
                 st.write(f"{price:,.0f} ل.س")
 
             st.write(f"📦 الكمية: {p.get('quantity')}")
 
         with col3:
-            if st.button("🗑️", key=p["id"]):
+            if st.button("✏️", key=f"edit_{p['id']}"):
+                st.session_state.mode = "edit"
+                st.session_state.edit_id = p["id"]
+                st.rerun()
+
+            if st.button("🗑️", key=f"del_{p['id']}"):
                 db.collection("products").document(p["id"]).delete()
                 st.cache_data.clear()
                 st.rerun()
