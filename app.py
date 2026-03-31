@@ -17,172 +17,149 @@ def init_firebase():
 
 db = init_firebase()
 
-# ================= دوال =================
+# ================= Helpers =================
 @st.cache_data
 def load_products():
     docs = db.collection("products").stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
-def save_product(data):
-    db.collection("products").add(data)
+@st.cache_data
+def load_categories():
+    docs = db.collection("categories").stream()
+    return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
-def update_product(product_id, data):
-    db.collection("products").document(product_id).update(data)
+def generate_category_code():
+    cats = load_categories()
+    if not cats:
+        return "001"
+    max_code = max(int(c["code"]) for c in cats)
+    return str(max_code + 1).zfill(3)
 
-def delete_product(product_id):
-    db.collection("products").document(product_id).delete()
+def generate_product_code(category_code):
+    products = load_products()
+    same = [p for p in products if p.get("category_code") == category_code]
+    if not same:
+        return f"{category_code}001"
+    max_code = max(int(p["code"][-3:]) for p in same)
+    return f"{category_code}{str(max_code + 1).zfill(3)}"
 
-def load_settings():
-    doc = db.collection("settings").document("general").get()
-    return doc.to_dict() if doc.exists else {"exchange_rate": 15000}
+def category_has_products(code):
+    products = load_products()
+    return any(p.get("category_code") == code for p in products)
 
-def save_settings(data):
-    db.collection("settings").document("general").set(data)
+# ================= Sidebar =================
+page = st.sidebar.radio("📂 التنقل", ["📦 الأصناف", "🗂️ المجموعات"])
 
-def calculate_syp(price, currency, rate):
-    return price if currency == "SYP" else price * rate
+# ================= صفحة المجموعات =================
+if page == "🗂️ المجموعات":
 
-# ================= بيانات =================
-settings = load_settings()
-exchange_rate = settings.get("exchange_rate", 15000)
-products = load_products()
+    st.title("🗂️ إدارة المجموعات")
 
-# ================= UI =================
-st.title("💊 نظام إدارة المستودعات الطبية")
-st.markdown("---")
+    # إضافة
+    st.subheader("➕ إضافة مجموعة")
+    name = st.text_input("اسم المجموعة")
 
-# سعر الصرف
-st.subheader("💱 سعر صرف الدولار")
-col1, col2 = st.columns([3,1])
-
-with col1:
-    new_rate = st.number_input("السعر", value=exchange_rate, step=100)
-
-with col2:
-    if st.button("تأكيد"):
-        save_settings({"exchange_rate": new_rate})
-        st.rerun()
-
-st.markdown("---")
-
-# زر إضافة
-if st.button("➕ إضافة صنف جديد"):
-    st.session_state.edit_id = None
-    st.session_state.delete_id = None
-    st.session_state.show_form = True
-    st.rerun()
-
-# ================= نموذج =================
-if st.session_state.get("show_form", False):
-
-    editing = st.session_state.get("edit_id")
-
-    product = next((p for p in products if p["id"] == editing), {}) if editing else {}
-
-    st.subheader("✏️ تعديل صنف" if editing else "➕ إضافة صنف")
-
-    name = st.text_input("اسم الصنف", value=product.get("name",""))
-    desc = st.text_area("الوصف", value=product.get("description",""))
-    category = st.text_input("المجموعة", value=product.get("category",""))
-
-    price = st.number_input("السعر", min_value=0.0, value=float(product.get("price",0)))
-
-    currency_map = {"SYP": "ليرة سورية", "USD": "دولار"}
-    currency_reverse = {v:k for k,v in currency_map.items()}
-
-    currency_display = currency_map.get(product.get("currency","SYP"), "ليرة سورية")
-    currency = st.selectbox("العملة", ["ليرة سورية","دولار"], index=["ليرة سورية","دولار"].index(currency_display))
-    currency_code = currency_reverse[currency]
-
-    quantity = st.number_input("الكمية", min_value=0, value=int(product.get("quantity",0)))
-
-    syp_price = calculate_syp(price, currency_code, new_rate)
-    st.text_input("السعر بالليرة", value=f"{syp_price:,.0f}", disabled=True)
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("💾 حفظ"):
-            if name:
-                data = {
-                    "name": name,
-                    "description": desc,
-                    "category": category,
-                    "price": price,
-                    "currency": currency_code,
-                    "quantity": quantity,
-                }
-
-                if editing:
-                    update_product(editing, data)
-                else:
-                    data["created_at"] = datetime.now().isoformat()
-                    save_product(data)
-
-                st.cache_data.clear()
-                st.session_state.show_form = False
-                st.session_state.edit_id = None
-                st.rerun()
-
-    with col2:
-        if st.button("❌ إلغاء"):
-            st.session_state.show_form = False
-            st.session_state.edit_id = None
+    if st.button("حفظ المجموعة"):
+        if name:
+            code = generate_category_code()
+            db.collection("categories").add({
+                "name": name,
+                "code": code
+            })
+            st.cache_data.clear()
+            st.success(f"تمت الإضافة بكود {code}")
             st.rerun()
-
-# ================= عرض =================
-st.subheader("📋 قائمة الأصناف")
-
-for p in products:
-    col1, col2, col3 = st.columns([2,2,2])
-
-    currency = p.get("currency","SYP")
-    price = p.get("price",0)
-    quantity = p.get("quantity",0)
-    syp_price = calculate_syp(price, currency, exchange_rate)
-
-    with col1:
-        st.markdown(f"**{p.get('name','')}**")
-        st.caption(p.get("category",""))
-
-    with col2:
-        if currency == "USD":
-            st.write(f"💵 {price} USD")
-            st.markdown(f"<span style='color:gray'>≈ {syp_price:,.0f} ل.س</span>", unsafe_allow_html=True)
-        else:
-            st.write(f"{price:,.0f} ل.س")
-
-        st.write(f"الكمية: {quantity}")
-
-    with col3:
-        if st.button("✏️ تعديل", key=f"edit_{p['id']}"):
-            st.session_state.edit_id = p["id"]
-            st.session_state.delete_id = None
-            st.session_state.show_form = True
-            st.rerun()
-
-        if st.button("🗑️ حذف", key=f"del_{p['id']}"):
-            st.session_state.delete_id = p["id"]
-            st.session_state.edit_id = None
-            st.session_state.show_form = False
-            st.rerun()
-
-    if st.session_state.get("delete_id") == p["id"]:
-        st.warning("تأكيد الحذف؟")
-        c1,c2 = st.columns(2)
-
-        with c1:
-            if st.button("نعم", key=f"yes_{p['id']}"):
-                delete_product(p["id"])
-                st.cache_data.clear()
-                st.session_state.delete_id = None
-                st.rerun()
-
-        with c2:
-            if st.button("إلغاء", key=f"no_{p['id']}"):
-                st.session_state.delete_id = None
-                st.rerun()
 
     st.markdown("---")
 
-st.caption("© نظام إدارة المستودعات")
+    # عرض
+    categories = load_categories()
+
+    for c in categories:
+        col1, col2 = st.columns([3,1])
+
+        with col1:
+            st.write(f"{c['code']} - {c['name']}")
+
+        with col2:
+            if st.button("🗑️", key=c["id"]):
+                if category_has_products(c["code"]):
+                    st.warning("❌ لا يمكن حذف مجموعة تحتوي على أصناف")
+                else:
+                    db.collection("categories").document(c["id"]).delete()
+                    st.cache_data.clear()
+                    st.rerun()
+
+# ================= صفحة الأصناف =================
+if page == "📦 الأصناف":
+
+    st.title("💊 إدارة الأصناف")
+
+    categories = load_categories()
+    products = load_products()
+
+    # سعر الصرف
+    settings = db.collection("settings").document("general").get()
+    exchange_rate = settings.to_dict().get("exchange_rate",15000) if settings.exists else 15000
+
+    new_rate = st.number_input("سعر الصرف", value=exchange_rate)
+
+    if st.button("تحديث السعر"):
+        db.collection("settings").document("general").set({"exchange_rate": new_rate})
+        st.rerun()
+
+    st.markdown("---")
+
+    # إضافة
+    if st.button("➕ إضافة صنف"):
+        st.session_state.add = True
+
+    if st.session_state.get("add"):
+
+        st.subheader("إضافة صنف")
+
+        name = st.text_input("الاسم")
+        desc = st.text_area("الوصف")
+
+        cat_names = [f"{c['code']} - {c['name']}" for c in categories]
+        selected = st.selectbox("المجموعة", cat_names)
+
+        category_code = selected.split(" - ")[0]
+
+        price = st.number_input("السعر", min_value=0.0)
+        currency = st.selectbox("العملة", ["SYP","USD"])
+
+        quantity = st.number_input("الكمية", min_value=0)
+
+        if st.button("حفظ الصنف"):
+            code = generate_product_code(category_code)
+
+            db.collection("products").add({
+                "name": name,
+                "description": desc,
+                "category_code": category_code,
+                "code": code,
+                "price": price,
+                "currency": currency,
+                "quantity": quantity,
+                "created_at": datetime.now().isoformat()
+            })
+
+            st.cache_data.clear()
+            st.success(f"تم الحفظ بالكود {code}")
+            st.session_state.add = False
+            st.rerun()
+
+    st.markdown("---")
+
+    # عرض
+    for p in products:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write(f"{p['code']} - {p['name']}")
+
+        with col2:
+            st.write(f"{p['price']} {p['currency']} | كمية: {p['quantity']}")
+
+        st.markdown("---")
