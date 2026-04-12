@@ -55,11 +55,75 @@ def category_has_products(code):
             return True
     return False
 
-# ================= Navigation =================
-page = st.sidebar.radio("📂 التنقل", ["📦 الأصناف", "🗂️ المجموعات"])
+# ================= Navigation State =================
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+
+# ================= Dashboard =================
+if st.session_state.page == "home":
+
+    st.markdown("""
+    <style>
+    .container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .item {
+      text-align: center;
+    }
+
+    .icon-box {
+      width: 85px;
+      height: 85px;
+      margin: auto;
+      border: 2px solid rgba(255,255,255,0.6);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease;
+    }
+
+    .icon-box:active {
+      transform: scale(1.1);
+    }
+
+    .icon-box svg {
+      width: 40px;
+      height: 40px;
+      stroke: rgba(255,255,255,0.75);
+    }
+
+    .label {
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.title("🏠 الرئيسية")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("📦\nالأصناف"):
+            st.session_state.page = "products"
+            st.rerun()
+
+    with col2:
+        if st.button("🗂️\nالمجموعات"):
+            st.session_state.page = "categories"
+            st.rerun()
 
 # ================= Categories =================
-if page == "🗂️ المجموعات":
+elif st.session_state.page == "categories":
+
+    if st.button("⬅️ رجوع"):
+        st.session_state.page = "home"
+        st.rerun()
 
     st.title("🗂️ إدارة المجموعات")
 
@@ -91,7 +155,6 @@ if page == "🗂️ المجموعات":
             if st.button("🗑️", key=f"del_cat_{c['id']}"):
                 st.session_state.delete_cat = c["id"]
 
-    # ===== تعديل مجموعة =====
     if st.session_state.get("edit_cat"):
         cat = next((x for x in categories if x["id"] == st.session_state.edit_cat), None)
 
@@ -107,32 +170,12 @@ if page == "🗂️ المجموعات":
                 st.cache_data.clear()
                 st.rerun()
 
-    # ===== تأكيد حذف مجموعة =====
-    if st.session_state.get("delete_cat"):
-        cat = next((x for x in categories if x["id"] == st.session_state.delete_cat), None)
-
-        if cat:
-            st.warning(f"⚠️ حذف المجموعة: {cat['name']} ؟")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                if st.button("❌ إلغاء حذف المجموعة"):
-                    st.session_state.delete_cat = None
-                    st.rerun()
-
-            with col2:
-                if st.button("🗑️ تأكيد الحذف"):
-                    if category_has_products(cat["code"]):
-                        st.error("❌ لا يمكن حذف مجموعة تحتوي على أصناف")
-                    else:
-                        db.collection("categories").document(cat["id"]).delete()
-                        st.session_state.delete_cat = None
-                        st.cache_data.clear()
-                        st.rerun()
-
 # ================= Products =================
-if page == "📦 الأصناف":
+elif st.session_state.page == "products":
+
+    if st.button("⬅️ رجوع"):
+        st.session_state.page = "home"
+        st.rerun()
 
     st.title("💊 إدارة الأصناف")
 
@@ -155,7 +198,6 @@ if page == "📦 الأصناف":
         st.session_state.edit_id = None
         st.rerun()
 
-    # ===== FORM =====
     if st.session_state.get("mode") in ["add", "edit"]:
 
         editing = st.session_state.get("edit_id")
@@ -205,7 +247,6 @@ if page == "📦 الأصناف":
 
     st.markdown("---")
 
-    # ===== LIST =====
     for p in products:
 
         col1, col2, col3 = st.columns([3,2,1])
@@ -237,7 +278,6 @@ if page == "📦 الأصناف":
             if st.button("🗑️", key=f"ask_delete_{p['id']}"):
                 st.session_state.delete_product = p["id"]
 
-        # ===== تأكيد حذف =====
         if st.session_state.get("delete_product") == p["id"]:
             colA, colB = st.columns(2)
 
