@@ -5,7 +5,128 @@ from firebase_admin import credentials, firestore
 import json
 
 st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
+if "page" not in st.session_state:
+    st.session_state.page = "home"
 
+if st.session_state.page == "home":
+
+    st.components.v1.html("""
+    <!DOCTYPE html>
+    <html lang="ar">
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    body {
+      margin:0;
+      background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
+      direction: rtl;
+      font-family: Arial;
+      color:white;
+    }
+
+    .container {
+      display:grid;
+      grid-template-columns: repeat(2,1fr);
+      gap:30px;
+      padding:25px;
+    }
+
+    .item {
+      text-align:center;
+    }
+
+    .icon-box {
+      width:85px;
+      height:85px;
+      margin:auto;
+      border:2px solid rgba(255,255,255,0.6);
+      border-radius:22px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      transition:0.15s;
+    }
+
+    .icon-box:active {
+      transform:scale(1.1);
+    }
+
+    .icon-box svg {
+      width:42px;
+      height:42px;
+      stroke:rgba(255,255,255,0.75);
+    }
+
+    .label {
+      margin-top:10px;
+      font-size:14px;
+    }
+    </style>
+    </head>
+
+    <body>
+
+    <div class="container">
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="user"></i></div>
+        <div class="label">ملفي</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="settings"></i></div>
+        <div class="label">الضبط</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="cross"></i></div>
+        <div class="label">الصيدليات</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="box"></i></div>
+        <div class="label">الأصناف</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="layers"></i></div>
+        <div class="label">المجموعات</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="users"></i></div>
+        <div class="label">الموردين</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="warehouse"></i></div>
+        <div class="label">المستودعات</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="banknote"></i></div>
+        <div class="label">الصندوق</div>
+      </div>
+
+      <div class="item">
+        <div class="icon-box"><i data-lucide="receipt"></i></div>
+        <div class="label">السندات</div>
+      </div>
+
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+    lucide.createIcons();
+    </script>
+
+    </body>
+    </html>
+    """, height=700)
+
+    st.stop()
 # ================= Firebase =================
 @st.cache_resource
 def init_firebase():
