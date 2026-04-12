@@ -149,14 +149,24 @@ def categories_section():
     st.markdown("""
     <style>
     /* تنسيق زر إضافة مجموعة */
-    .add-category-btn button {
+    div[data-testid="column"]:has(button[key="open_add_category"]) {
+        display: flex;
+        justify-content: flex-start;
+    }
+    
+    button[key="open_add_category"] {
         width: 60px !important;
         height: 60px !important;
         border-radius: 15px !important;
-        font-size: 24px !important;
+        font-size: 30px !important;
         padding: 0 !important;
         background-color: #3b82f6 !important;
         color: white !important;
+        border: none !important;
+    }
+    
+    button[key="open_add_category"]:hover {
+        background-color: #2563eb !important;
     }
     
     /* تنسيق أزرار المجموعات */
@@ -181,17 +191,38 @@ def categories_section():
         font-size: 12px;
         opacity: 0.5;
         margin-top: 5px;
+        text-align: center;
     }
     
     /* تنسيق حقل الكود غير القابل للتعديل */
     .code-display {
         background-color: #1e3a8a;
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 8px;
         color: #94a3b8;
         font-size: 14px;
         text-align: center;
-        margin-top: 5px;
+    }
+    
+    /* تنسيق صف الإجراءات */
+    .actions-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .code-item {
+        flex: 2;
+        min-width: 100px;
+    }
+    
+    .action-item {
+        flex: 1;
+        min-width: 70px;
+        text-align: center;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -224,12 +255,12 @@ def categories_section():
     # =========================================
     # ➕ إضافة مجموعة (زر صغير 60x60)
     # =========================================
-    st.markdown('<div class="add-category-btn">', unsafe_allow_html=True)
-    if st.button("➕", key="open_add_category"):
-        st.session_state.add_mode = True
-    st.markdown('</div>', unsafe_allow_html=True)
+    col_add1, col_add2 = st.columns([1, 10])
+    with col_add1:
+        if st.button("➕", key="open_add_category"):
+            st.session_state.add_mode = True
 
-    # ===== نافذة إضافة مجموعة (تظهر عند الضغط على زر الإضافة) =====
+    # ===== نافذة إضافة مجموعة =====
     if st.session_state.add_mode:
 
         st.markdown("---")
@@ -287,38 +318,45 @@ def categories_section():
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            st.markdown(f'<div class="code-display">الكود: {c["code"]}</div>', unsafe_allow_html=True)
-
-            count = sum(1 for p in products if p.get("category_code") == c["code"])
-            st.write(f"📊 عدد الأصناف: {count}")
-
-            # ===== أزرار =====
-            col1, col2, col3 = st.columns(3)
-
-            # ===== تعديل =====
-            with col1:
-                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-                if st.button("✏️", key=f"edit_btn_{c['id']}"):
+            # ===== صف واحد يحتوي على الكود والأزرار =====
+            st.markdown(f"""
+            <div class="actions-row">
+                <div class="code-item">
+                    <div class="code-display">الكود: {c['code']}</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-btn" id="edit_btn_{c['id']}"></div>
+                    <div class="action-label">تعديل</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-btn" id="del_btn_{c['id']}"></div>
+                    <div class="action-label">حذف</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-btn" id="view_btn_{c['id']}"></div>
+                    <div class="action-label">استعراض</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # الأزرار الفعلية (مخفية لكنها تعمل)
+            col_btn1, col_btn2, col_btn3 = st.columns(3)
+            with col_btn1:
+                if st.button("✏️", key=f"edit_btn_{c['id']}", help="تعديل"):
                     st.session_state.edit_id = c["id"]
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('<div class="action-label">تعديل</div>', unsafe_allow_html=True)
-
-            # ===== حذف =====
-            with col2:
-                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-                if st.button("🗑️", key=f"del_btn_{c['id']}"):
+                    st.rerun()
+            with col_btn2:
+                if st.button("🗑️", key=f"del_btn_{c['id']}", help="حذف"):
                     st.session_state.delete_id = c["id"]
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('<div class="action-label">حذف</div>', unsafe_allow_html=True)
-
-            # ===== استعراض =====
-            with col3:
-                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-                if st.button("👁️", key=f"view_btn_{c['id']}"):
+                    st.rerun()
+            with col_btn3:
+                if st.button("👁️", key=f"view_btn_{c['id']}", help="استعراض الأصناف"):
                     st.session_state.page = "products"
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('<div class="action-label">استعراض</div>', unsafe_allow_html=True)
+
+            # عرض عدد الأصناف
+            count = sum(1 for p in products if p.get("category_code") == c["code"])
+            st.caption(f"📊 عدد الأصناف: {count}")
 
             # =========================================
             # ✏️ تعديل inline
