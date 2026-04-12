@@ -10,6 +10,17 @@ st.markdown("""
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
+/* ===== الترويسة ===== */
+.header {
+    height: 120px; /* 👈 مساحة فوق */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
 /* زر مربع */
 .stButton > button {
     width: 90px;
@@ -38,9 +49,9 @@ st.markdown("""
     margin-top: 5px;
 }
 
-/* 👇 المسافة بين كل عنصر والتاني */
+/* المسافة بين العناصر */
 .icon-block {
-    margin-bottom: 30px; /* 👈 هون التحكم */
+    margin-bottom: 30px;
 }
 
 </style>
@@ -53,6 +64,9 @@ if "page" not in st.session_state:
 # ===== HOME =====
 if st.session_state.page == "home":
 
+    # ===== الترويسة =====
+    st.markdown('<div class="header">🏪 اسم المستودع</div>', unsafe_allow_html=True)
+
     def icon(label, emoji, page):
         st.markdown('<div class="icon-block">', unsafe_allow_html=True)
 
@@ -64,7 +78,7 @@ if st.session_state.page == "home":
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ===== الترتيب =====
+    # ===== الأيقونات =====
     icon("ملفي الشخصي", "👤", "profile")
     icon("الضبط", "⚙️", "settings")
     icon("الصيدليات", "🏥", "pharmacy")
