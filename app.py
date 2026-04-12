@@ -126,7 +126,7 @@ def products_section():
 # ======= 🗂️ قسم المجموعات ================
 # =========================================
 # =========================================
-# ======= 🗂️ قسم المجموعات ================
+# ======= 🗂️ قسم المجموعات (HTML) =========
 # =========================================
 
 def generate_category_code():
@@ -143,6 +143,9 @@ def categories_section():
     if "categories_data" not in st.session_state:
         st.session_state.categories_data = []
 
+    if "search_text" not in st.session_state:
+        st.session_state.search_text = ""
+
     if "show_add" not in st.session_state:
         st.session_state.show_add = False
 
@@ -152,112 +155,131 @@ def categories_section():
     if "delete_id" not in st.session_state:
         st.session_state.delete_id = None
 
-    if "search_text" not in st.session_state:
-        st.session_state.search_text = ""
-
-    # ====== رجوع ======
+    # ===== رجوع =====
     if st.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
 
-    st.title("🗂️ إدارة المجموعات")
+    st.markdown("## 🗂️ إدارة المجموعات")
 
-    # =========================================
-    # ======= 🔝 شريط (إضافة + بحث) ==========
-    # =========================================
+    # ===== بحث =====
+    st.session_state.search_text = st.text_input("🔍", label_visibility="collapsed")
 
-    col_left, col_right = st.columns([1,3])
-
-    with col_left:
-        if st.button("➕", key="add_btn"):
-            st.session_state.show_add = True
-        st.caption("إضافة مجموعة")
-
-    with col_right:
-        st.session_state.search_text = st.text_input(
-            "🔍", value=st.session_state.search_text, label_visibility="collapsed"
-        )
-
-    st.markdown("---")
-
-    # =========================================
-    # ======= 🎨 CSS ==========================
-    # =========================================
-
-    st.markdown("""
-    <style>
-    .btn {
-        width:60px;
-        height:60px;
-        border-radius:10px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:20px;
-    }
-    .code {
-        color:rgba(255,255,255,0.5);
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # =========================================
-    # ======= 📋 Header =======================
-    # =========================================
-
-    col1, col2, col3, col4, col5 = st.columns([3,1,1,1,1])
-
-    col1.write("الاسم")
-    col2.write("الكود")
-    col3.write("عدد الأصناف")
-    col4.write("✏️")
-    col5.write("🗑️")
-
-    st.markdown("---")
-
-    # =========================================
-    # ======= 🔍 فلترة ========================
-    # =========================================
-
+    # ===== فلترة =====
     filtered = [
         c for c in st.session_state.categories_data
         if st.session_state.search_text.lower() in c["name"].lower()
     ]
 
     # =========================================
-    # ======= 📋 عرض ==========================
+    # ======= 🎨 HTML + CSS ===================
     # =========================================
 
+    html = """
+    <style>
+    .top-bar {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:20px;
+    }
+
+    .btn {
+        width:60px;
+        height:60px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,0.3);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:22px;
+        cursor:pointer;
+    }
+
+    .btn:hover {
+        background:rgba(255,255,255,0.1);
+    }
+
+    .table {
+        width:100%;
+    }
+
+    .row {
+        display:flex;
+        align-items:center;
+        padding:10px 5px;
+        border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+
+    .header {
+        font-weight:bold;
+        border-bottom:2px solid rgba(255,255,255,0.3);
+    }
+
+    .cell {
+        flex:1;
+        text-align:left;
+    }
+
+    .actions {
+        display:flex;
+        gap:10px;
+    }
+
+    .code {
+        color:rgba(255,255,255,0.5);
+    }
+    </style>
+
+    <div class="top-bar">
+        <div class="btn">➕</div>
+        <div>🔍</div>
+    </div>
+
+    <div class="table">
+
+        <div class="row header">
+            <div class="cell">الاسم</div>
+            <div class="cell">الكود</div>
+            <div class="cell">عدد</div>
+            <div class="cell">إجراءات</div>
+        </div>
+    """
+
     for i, c in enumerate(filtered):
+        html += f"""
+        <div class="row">
+            <div class="cell">{c['name']}</div>
+            <div class="cell code">{c['code']}</div>
+            <div class="cell">0</div>
+            <div class="cell">
+                <div class="actions">
+                    <span>✏️</span>
+                    <span>🗑️</span>
+                </div>
+            </div>
+        </div>
+        """
 
-        col1, col2, col3, col4, col5 = st.columns([3,1,1,1,1])
+    html += "</div>"
 
-        col1.write(c["name"])
-        col2.markdown(f"<span class='code'>{c['code']}</span>", unsafe_allow_html=True)
-        col3.write("0")
-
-        if col4.button("✏️", key=f"edit_{i}"):
-            st.session_state.edit_id = i
-
-        if col5.button("🗑️", key=f"del_{i}"):
-            st.session_state.delete_id = i
+    st.markdown(html, unsafe_allow_html=True)
 
     # =========================================
     # ======= ➕ إضافة ========================
     # =========================================
 
-    if st.session_state.show_add:
+    if st.button("➕ إضافة مجموعة"):
+        st.session_state.show_add = True
 
-        st.markdown("### ➕ إضافة مجموعة")
+    if st.session_state.show_add:
 
         name = st.text_input("اسم المجموعة")
         code = generate_category_code()
 
         st.markdown(f"الكود: <span style='color:gray'>{code}</span>", unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-
-        if col1.button("موافق"):
+        if st.button("موافق"):
             if name:
                 st.session_state.categories_data.append({
                     "name": name,
@@ -266,55 +288,8 @@ def categories_section():
                 st.session_state.show_add = False
                 st.rerun()
 
-        if col2.button("إلغاء"):
+        if st.button("إلغاء"):
             st.session_state.show_add = False
-            st.rerun()
-
-    # =========================================
-    # ======= ✏️ تعديل ========================
-    # =========================================
-
-    if st.session_state.edit_id is not None:
-
-        c = st.session_state.categories_data[st.session_state.edit_id]
-
-        st.markdown("### ✏️ تعديل مجموعة")
-
-        new_name = st.text_input("اسم المجموعة", value=c["name"])
-
-        st.markdown(f"الكود: <span style='color:gray'>{c['code']}</span>", unsafe_allow_html=True)
-
-        col1, col2 = st.columns(2)
-
-        if col1.button("موافق"):
-            if new_name:
-                c["name"] = new_name
-                st.session_state.edit_id = None
-                st.rerun()
-
-        if col2.button("إلغاء"):
-            st.session_state.edit_id = None
-            st.rerun()
-
-    # =========================================
-    # ======= 🗑️ حذف =========================
-    # =========================================
-
-    if st.session_state.delete_id is not None:
-
-        c = st.session_state.categories_data[st.session_state.delete_id]
-
-        st.warning(f"⚠️ حذف المجموعة: {c['name']} ؟")
-
-        col1, col2 = st.columns(2)
-
-        if col1.button("إلغاء"):
-            st.session_state.delete_id = None
-            st.rerun()
-
-        if col2.button("تأكيد"):
-            st.session_state.categories_data.pop(st.session_state.delete_id)
-            st.session_state.delete_id = None
             st.rerun()
 # =========================================
 # ======= 👥 قسم الموردين =================
