@@ -165,13 +165,14 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق أزرار المجموعات */
-    .group-btn button {
-        width: 100% !important;
+    /* تنسيق زر المجموعة (بدون أيقونة، ارتفاع 60px) */
+    button:has(span:contains("{c['name']}")) {
         height: 60px !important;
-        text-align: right !important;
-        font-size: 18px !important;
         border-radius: 12px !important;
+        font-size: 18px !important;
+        padding: 0 20px !important;
+        background-color: #3b82f6 !important;
+        color: white !important;
     }
 
     /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) */
@@ -291,18 +292,14 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة =====
+        # ===== زر المجموعة (بدون أيقونة، ارتفاع 60px) =====
         with st.container():
-            st.markdown('<div class="group-btn">', unsafe_allow_html=True)
-
-            if st.button(f"📁 {c['name']}", key=f"group_{c['id']}"):
+            if st.button(f"{c['name']}", key=f"group_{c['id']}"):
                 if st.session_state.open == c["id"]:
                     st.session_state.open = None
                 else:
                     st.session_state.open = c["id"]
                 st.rerun()
-
-            st.markdown('</div>', unsafe_allow_html=True)
 
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
