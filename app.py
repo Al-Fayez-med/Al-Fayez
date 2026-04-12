@@ -2,7 +2,10 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-# ===== STYLE =====
+# =========================================
+# ======= 🎨 STYLE (CSS) ==================
+# =========================================
+
 st.markdown("""
 <style>
 
@@ -10,18 +13,15 @@ st.markdown("""
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
-/* ===== الترويسة ===== */
+/* ===== HEADER ===== */
 .header {
-    height: 120px; /* 👈 مساحة فوق */
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
 }
 
-/* زر مربع */
+/* ===== ICON BUTTON ===== */
 .stButton > button {
     width: 90px;
     height: 90px;
@@ -41,7 +41,7 @@ st.markdown("""
     transform: scale(2.5);
 }
 
-/* النص */
+/* ===== TEXT ===== */
 .label {
     text-align: left;
     color: white;
@@ -49,7 +49,7 @@ st.markdown("""
     margin-top: 5px;
 }
 
-/* المسافة بين العناصر */
+/* ===== SPACING ===== */
 .icon-block {
     margin-bottom: 30px;
 }
@@ -57,28 +57,46 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ===== NAV =====
+# =========================================
+# ======= 🔁 NAVIGATION ====================
+# =========================================
+
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
-# ===== HOME =====
-if st.session_state.page == "home":
+# =========================================
+# ======= 🧱 HEADER ========================
+# =========================================
 
-    # ===== الترويسة =====
-    st.markdown('<div class="header">🏪 اسم المستودع</div>', unsafe_allow_html=True)
+def show_header():
+    st.markdown(
+        '<div class="header">🏪 اسم المستودع</div>',
+        unsafe_allow_html=True
+    )
 
-    def icon(label, emoji, page):
-        st.markdown('<div class="icon-block">', unsafe_allow_html=True)
+# =========================================
+# ======= 🧩 ICON COMPONENT ===============
+# =========================================
 
-        if st.button(emoji, key=page):
-            st.session_state.page = page
-            st.rerun()
+def icon(label, emoji, page):
+    st.markdown('<div class="icon-block">', unsafe_allow_html=True)
 
-        st.markdown(f'<div class="label">{label}</div>', unsafe_allow_html=True)
+    if st.button(emoji, key=page):
+        st.session_state.page = page
+        st.rerun()
 
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="label">{label}</div>', unsafe_allow_html=True)
 
-    # ===== الأيقونات =====
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# =========================================
+# ======= 🏠 الصفحة الرئيسية ===============
+# =========================================
+
+def home_page():
+
+    show_header()
+
     icon("ملفي الشخصي", "👤", "profile")
     icon("الضبط", "⚙️", "settings")
     icon("الصيدليات", "🏥", "pharmacy")
@@ -89,11 +107,147 @@ if st.session_state.page == "home":
     icon("السندات", "🧾", "receipts")
     icon("الصندوق", "💰", "cash")
 
-# ===== PAGES =====
-else:
+# =========================================
+# ======= 💊 قسم الأصناف ==================
+# =========================================
+
+def products_section():
+
+    # -------- 📄 الصفحة الرئيسية للأصناف --------
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("💊 الأصناف")
+
+    st.write("هنا رح نبني نظام الأصناف لاحقًا")
+
+# =========================================
+# ======= 🗂️ قسم المجموعات ================
+# =========================================
+
+def categories_section():
 
     if st.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
 
-    st.title("صفحة قيد التطوير")
+    st.title("🗂️ المجموعات")
+
+# =========================================
+# ======= 👥 قسم الموردين =================
+# =========================================
+
+def suppliers_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("👥 الموردين")
+
+# =========================================
+# ======= 🏭 قسم المستودعات ===============
+# =========================================
+
+def warehouses_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("🏭 المستودعات")
+
+# =========================================
+# ======= 💰 قسم الصندوق ==================
+# =========================================
+
+def cash_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("💰 الصندوق")
+
+# =========================================
+# ======= 🧾 قسم السندات ==================
+# =========================================
+
+def receipts_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("🧾 السندات")
+
+# =========================================
+# ======= 🏥 قسم الصيدليات ================
+# =========================================
+
+def pharmacy_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("🏥 الصيدليات")
+
+# =========================================
+# ======= ⚙️ قسم الضبط ====================
+# =========================================
+
+def settings_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("⚙️ الضبط")
+
+# =========================================
+# ======= 👤 الملف الشخصي =================
+# =========================================
+
+def profile_section():
+
+    if st.button("⬅️"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    st.title("👤 ملفي الشخصي")
+
+# =========================================
+# ======= 🚀 ROUTER =======================
+# =========================================
+
+if st.session_state.page == "home":
+    home_page()
+
+elif st.session_state.page == "products":
+    products_section()
+
+elif st.session_state.page == "categories":
+    categories_section()
+
+elif st.session_state.page == "suppliers":
+    suppliers_section()
+
+elif st.session_state.page == "warehouses":
+    warehouses_section()
+
+elif st.session_state.page == "cash":
+    cash_section()
+
+elif st.session_state.page == "receipts":
+    receipts_section()
+
+elif st.session_state.page == "pharmacy":
+    pharmacy_section()
+
+elif st.session_state.page == "settings":
+    settings_section()
+
+elif st.session_state.page == "profile":
+    profile_section()
