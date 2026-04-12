@@ -6,33 +6,34 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
-/* توسيط المحتوى */
-.block-container {
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-}
-
 /* خلفية */
 [data-testid="stAppViewContainer"] {
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
-/* حاوية وسط */
+/* الحاوية الأساسية */
+.center-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* الصندوق بالنص */
 .center-box {
-    width: 300px;
+    width: 320px;
+    margin-top: 50px;
 }
 
 /* الأزرار */
 .stButton > button {
     width: 100%;
-    height: 80px;  /* تكبير */
+    height: 80px;
     margin: 10px 0;
     border-radius: 16px;
     border: none;
     background-color: rgba(255,255,255,0.1);
     color: white;
-    font-size: 18px; /* تكبير الخط */
+    font-size: 18px;
 }
 
 </style>
@@ -45,6 +46,7 @@ if "page" not in st.session_state:
 # ===== HOME =====
 if st.session_state.page == "home":
 
+    st.markdown('<div class="center-wrapper">', unsafe_allow_html=True)
     st.markdown('<div class="center-box">', unsafe_allow_html=True)
 
     st.title("📱 القائمة الرئيسية")
@@ -85,6 +87,7 @@ if st.session_state.page == "home":
         st.session_state.page = "categories"
         st.rerun()
 
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ===== PAGES =====
