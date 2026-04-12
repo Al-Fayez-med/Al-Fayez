@@ -105,6 +105,7 @@ def home_page():
 # =========================================
 def categories_section():
 
+    # ===== رجوع =====
     if st.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
@@ -117,12 +118,26 @@ def categories_section():
     if "open" not in st.session_state:
         st.session_state.open = None
 
+    if "add_mode" not in st.session_state:
+        st.session_state.add_mode = False
+
+    if "edit" not in st.session_state:
+        st.session_state.edit = None
+
+    if "delete" not in st.session_state:
+        st.session_state.delete = None
+
+    # =========================================
+    # ➕ زر الإضافة (فوق)
+    # =========================================
     if st.button("➕ إضافة مجموعة"):
         st.session_state.add_mode = True
 
     st.markdown("---")
 
-    # ===== عرض =====
+    # =========================================
+    # 📁 عرض المجموعات
+    # =========================================
     for c in categories:
 
         if st.button(f"📁 {c['name']}", key=c["id"]):
@@ -136,81 +151,129 @@ def categories_section():
 
         if st.session_state.open == c["id"]:
 
-            st.markdown(f"<span style='color:gray'>الكود: {c['code']}</span>", unsafe_allow_html=True)
+            st.markdown(
+                f"<span style='color:gray'>الكود: {c['code']}</span>",
+                unsafe_allow_html=True
+            )
 
             count = sum(1 for p in products if p.get("category_code") == c["code"])
             st.write(f"عدد الأصناف: {count}")
 
+            # ===== أزرار =====
             col1, col2, col3 = st.columns(3)
 
-            if col1.button("✏️ تعديل", key="e"+c["id"]):
-                st.session_state.edit = c["id"]
+            with col1:
+                btn = st.button("✏️", key="e"+c["id"])
+                st.write("تعديل")
+                if btn:
+                    st.session_state.edit = c["id"]
 
-            if col2.button("🗑️ حذف", key="d"+c["id"]):
-                st.session_state.delete = c["id"]
+            with col2:
+                btn = st.button("🗑️", key="d"+c["id"])
+                st.write("حذف")
+                if btn:
+                    st.session_state.delete = c["id"]
 
-            if col3.button("👁️ استعراض", key="v"+c["id"]):
-                st.session_state.page = "products"
+            with col3:
+                btn = st.button("👁️", key="v"+c["id"])
+                st.write("استعراض")
+                if btn:
+                    st.session_state.page = "products"
+                    st.rerun()
 
             st.markdown("---")
 
-    # ===== إضافة =====
-    if st.session_state.get("add_mode"):
+    # =========================================
+    # ➕ نافذة إضافة (Popup)
+    # =========================================
+    if st.session_state.add_mode:
 
-        name = st.text_input("اسم المجموعة")
-        code = generate_category_code()
+        with st.modal("➕ إضافة مجموعة"):
 
-        st.markdown(f"<span style='color:gray'>الكود: {code}</span>", unsafe_allow_html=True)
+            name = st.text_input("اسم المجموعة")
+            code = generate_category_code()
 
-        if st.button("موافق"):
-            if name:
-                db.collection("categories").add({
-                    "name": name,
-                    "code": code
-                })
+            st.markdown(
+                f"<span style='color:gray'>الكود: {code}</span>",
+                unsafe_allow_html=True
+            )
+
+            col1, col2 = st.columns(2)
+
+            if col1.button("موافق"):
+                if name:
+                    db.collection("categories").add({
+                        "name": name,
+                        "code": code
+                    })
+                    st.session_state.add_mode = False
+                    st.cache_data.clear()
+                    st.rerun()
+
+            if col2.button("إلغاء"):
                 st.session_state.add_mode = False
-                st.cache_data.clear()
                 st.rerun()
 
-        if st.button("إلغاء"):
-            st.session_state.add_mode = False
-            st.rerun()
-
-    # ===== تعديل =====
-    if st.session_state.get("edit"):
+    # =========================================
+    # ✏️ تعديل (Popup)
+    # =========================================
+    if st.session_state.edit:
 
         cat = next((x for x in categories if x["id"] == st.session_state.edit), None)
 
         if cat:
-            new_name = st.text_input("اسم جديد", value=cat["name"])
+            with st.modal("✏️ تعديل مجموعة"):
 
-            if st.button("حفظ"):
-                db.collection("categories").document(cat["id"]).update({
-                    "name": new_name
-                })
-                st.session_state.edit = None
-                st.cache_data.clear()
-                st.rerun()
+                new_name = st.text_input("اسم المجموعة", value=cat["name"])
 
-    # ===== حذف =====
-    if st.session_state.get("delete"):
+                st.markdown(
+                    f"<span style='color:gray'>الكود: {cat['code']}</span>",
+                    unsafe_allow_html=True
+                )
+
+                col1, col2 = st.columns(2)
+
+                if col1.button("موافق"):
+                    db.collection("categories").document(cat["id"]).update({
+                        "name": new_name
+                    })
+                    st.session_state.edit = None
+                    st.cache_data.clear()
+                    st.rerun()
+
+                if col2.button("إلغاء"):
+                    st.session_state.edit = None
+                    st.rerun()
+
+    # =========================================
+    # 🗑️ حذف (Popup)
+    # =========================================
+    if st.session_state.delete:
 
         cat = next((x for x in categories if x["id"] == st.session_state.delete), None)
 
         if cat:
-            st.warning(f"حذف {cat['name']}؟")
+            with st.modal("⚠️ تأكيد الحذف"):
 
-            if st.button("تأكيد"):
+                st.warning(f"حذف {cat['name']}؟")
+
                 has_products = any(p.get("category_code") == cat["code"] for p in products)
 
                 if has_products:
-                    st.error("لا يمكن الحذف")
+                    st.error("❌ لا يمكن حذف مجموعة تحتوي على أصناف")
                 else:
-                    db.collection("categories").document(cat["id"]).delete()
-                    st.session_state.delete = None
-                    st.cache_data.clear()
-                    st.rerun()
+                    col1, col2 = st.columns(2)
 
+                    if col1.button("إلغاء"):
+                        st.session_state.delete = None
+                        st.rerun()
+
+                    if col2.button("تأكيد"):
+                        db.collection("categories").document(cat["id"]).delete()
+                        st.session_state.delete = None
+                        st.cache_data.clear()
+                        st.rerun()
+    
 # =========================================
 # 💊 PRODUCTS
 # =========================================
