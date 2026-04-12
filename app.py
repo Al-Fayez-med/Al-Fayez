@@ -6,22 +6,27 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
+/* حذف الهوامش */
+.block-container {
+    padding: 0 !important;
+}
+
 /* خلفية */
 [data-testid="stAppViewContainer"] {
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
-/* الحاوية الأساسية */
-.center-wrapper {
+/* هذا أهم شي 👇 */
+.main {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: center;   /* أفقي */
+    align-items: center;       /* عمودي */
+    height: 100vh;             /* طول الشاشة كامل */
 }
 
-/* الصندوق بالنص */
+/* الصندوق */
 .center-box {
-    width: 320px;
-    margin-top: 50px;
+    width: 300px;
 }
 
 /* الأزرار */
@@ -46,10 +51,7 @@ if "page" not in st.session_state:
 # ===== HOME =====
 if st.session_state.page == "home":
 
-    st.markdown('<div class="center-wrapper">', unsafe_allow_html=True)
     st.markdown('<div class="center-box">', unsafe_allow_html=True)
-
-    st.title("📱 القائمة الرئيسية")
 
     if st.button("👤 ملفي الشخصي"):
         st.session_state.page = "profile"
@@ -87,7 +89,6 @@ if st.session_state.page == "home":
         st.session_state.page = "categories"
         st.rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ===== PAGES =====
