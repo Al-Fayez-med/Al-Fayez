@@ -24,10 +24,10 @@ st.markdown("""
     justify-content: center;
 }
 
-/* 👇 تكبير الإيموجي */
+/* تكبير الإيموجي */
 .stButton > button span {
     display: inline-block;
-    transform: scale(2.5); /* غير الرقم إذا بدك أكبر/أصغر */
+    transform: scale(2.5);
 }
 
 /* النص */
@@ -36,7 +36,11 @@ st.markdown("""
     color: white;
     font-size: 14px;
     margin-top: 5px;
-    margin-bottom: 20px;
+}
+
+/* 👇 المسافة بين كل عنصر والتاني */
+.icon-block {
+    margin-bottom: 30px; /* 👈 هون التحكم */
 }
 
 </style>
@@ -50,21 +54,26 @@ if "page" not in st.session_state:
 if st.session_state.page == "home":
 
     def icon(label, emoji, page):
+        st.markdown('<div class="icon-block">', unsafe_allow_html=True)
+
         if st.button(emoji, key=page):
             st.session_state.page = page
             st.rerun()
+
         st.markdown(f'<div class="label">{label}</div>', unsafe_allow_html=True)
 
-    # ===== الأيقونات =====
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ===== الترتيب =====
     icon("ملفي الشخصي", "👤", "profile")
     icon("الضبط", "⚙️", "settings")
     icon("الصيدليات", "🏥", "pharmacy")
     icon("الأصناف", "📦", "products")
-    icon("الموردين", "👥", "suppliers")
-    icon("المستودعات", "🏭", "warehouses")
-    icon("الصندوق", "💰", "cash")
-    icon("السندات", "🧾", "receipts")
     icon("المجموعات", "🗂️", "categories")
+    icon("المستودعات", "🏭", "warehouses")
+    icon("الموردين", "👥", "suppliers")
+    icon("السندات", "🧾", "receipts")
+    icon("الصندوق", "💰", "cash")
 
 # ===== PAGES =====
 else:
@@ -73,4 +82,4 @@ else:
         st.session_state.page = "home"
         st.rerun()
 
-    st.title("صفحة")
+    st.title("صفحة قيد التطوير")
