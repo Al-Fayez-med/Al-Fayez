@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-# ====== STYLE ======
+# ===== STYLE =====
 st.markdown("""
 <style>
 body {
@@ -13,15 +13,15 @@ body {
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
-/* شبكة عمودين ثابتة */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    padding: 20px;
+/* نخلي الأعمدة ما تنهار على الجوال */
+@media (max-width: 768px) {
+    [data-testid="column"] {
+        width: 50% !important;
+        flex: 1 1 50% !important;
+    }
 }
 
-/* زر */
+/* الأزرار */
 .stButton>button {
     width: 100%;
     height: 110px;
@@ -31,63 +31,68 @@ body {
     color: white;
     font-size: 15px;
 }
-
-.stButton>button:hover {
-    border-color: white;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
-# ====== NAV ======
+# ===== NAV =====
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
-# ====== HOME ======
+# ===== HOME =====
 if st.session_state.page == "home":
 
-    st.markdown('<div class="grid">', unsafe_allow_html=True)
+    # صف 1
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("👤\nملفي الشخصي"):
+            st.session_state.page = "profile"
+            st.rerun()
+    with col2:
+        if st.button("⚙️\nالضبط"):
+            st.session_state.page = "settings"
+            st.rerun()
 
-    if st.button("👤\nملفي الشخصي"):
-        st.session_state.page = "profile"
-        st.rerun()
+    # صف 2
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🏥\nالصيدليات"):
+            st.session_state.page = "pharmacy"
+            st.rerun()
+    with col2:
+        if st.button("📦\nالأصناف"):
+            st.session_state.page = "products"
+            st.rerun()
 
-    if st.button("⚙️\nالضبط"):
-        st.session_state.page = "settings"
-        st.rerun()
+    # صف 3
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("👥\nالموردين"):
+            st.session_state.page = "suppliers"
+            st.rerun()
+    with col2:
+        if st.button("🏭\nالمستودعات"):
+            st.session_state.page = "warehouses"
+            st.rerun()
 
-    if st.button("🏥\nالصيدليات"):
-        st.session_state.page = "pharmacy"
-        st.rerun()
+    # صف 4
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("💰\nالصندوق"):
+            st.session_state.page = "cash"
+            st.rerun()
+    with col2:
+        if st.button("🧾\nالسندات"):
+            st.session_state.page = "receipts"
+            st.rerun()
 
-    if st.button("📦\nالأصناف"):
-        st.session_state.page = "products"
-        st.rerun()
+    # صف 5 (الأيقونة الناقصة)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🗂️\nالمجموعات"):
+            st.session_state.page = "categories"
+            st.rerun()
 
-    if st.button("👥\nالموردين"):
-        st.session_state.page = "suppliers"
-        st.rerun()
-
-    if st.button("🏭\nالمستودعات"):
-        st.session_state.page = "warehouses"
-        st.rerun()
-
-    if st.button("💰\nالصندوق"):
-        st.session_state.page = "cash"
-        st.rerun()
-
-    if st.button("🧾\nالسندات"):
-        st.session_state.page = "receipts"
-        st.rerun()
-
-    # 👇 الأيقونة الناقصة (عدل اسمها إذا بدك)
-    if st.button("🗂️\nالمجموعات"):
-        st.session_state.page = "categories"
-        st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ====== PAGES ======
+# ===== PAGES =====
 else:
 
     if st.button("⬅️ رجوع"):
