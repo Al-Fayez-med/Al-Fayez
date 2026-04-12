@@ -2,6 +2,35 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
+# ===== STYLE =====
+st.markdown("""
+<style>
+
+/* خلفية */
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
+}
+
+/* الأزرار */
+.stButton > button {
+    width: 100%;
+    height: 80px;
+    margin: 10px 0;
+    border-radius: 18px;
+    border: none;
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 18px;
+}
+
+/* مسافة فوق */
+.block-container {
+    padding-top: 40px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # ===== NAV =====
 if "page" not in st.session_state:
     st.session_state.page = "home"
@@ -9,89 +38,56 @@ if "page" not in st.session_state:
 # ===== HOME =====
 if st.session_state.page == "home":
 
-    st.markdown("""
-    <style>
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(2,1fr);
-        gap: 15px;
-        padding: 20px;
-    }
+    # 👇 هذا هو السر (سنتر حقيقي)
+    left, center, right = st.columns([1,2,1])
 
-    .item {
-        text-align: center;
-    }
+    with center:
 
-    .box {
-        width: 100%;
-        height: 110px;
-        border-radius: 20px;
-        border: 2px solid rgba(255,255,255,0.5);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background: rgba(255,255,255,0.05);
-        color:white;
-        font-size:16px;
-    }
-
-    body {
-        background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ===== GRID =====
-    st.markdown('<div class="grid">', unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("👤\nملفي الشخصي"):
+        if st.button("👤 ملفي الشخصي"):
             st.session_state.page = "profile"
             st.rerun()
 
-        if st.button("🏥\nالصيدليات"):
-            st.session_state.page = "pharmacy"
-            st.rerun()
-
-        if st.button("👥\nالموردين"):
-            st.session_state.page = "suppliers"
-            st.rerun()
-
-        if st.button("💰\nالصندوق"):
-            st.session_state.page = "cash"
-            st.rerun()
-
-    with col2:
-        if st.button("⚙️\nالضبط"):
+        if st.button("⚙️ الضبط"):
             st.session_state.page = "settings"
             st.rerun()
 
-        if st.button("📦\nالأصناف"):
+        if st.button("🏥 الصيدليات"):
+            st.session_state.page = "pharmacy"
+            st.rerun()
+
+        if st.button("📦 الأصناف"):
             st.session_state.page = "products"
             st.rerun()
 
-        if st.button("🏭\nالمستودعات"):
+        if st.button("👥 الموردين"):
+            st.session_state.page = "suppliers"
+            st.rerun()
+
+        if st.button("🏭 المستودعات"):
             st.session_state.page = "warehouses"
             st.rerun()
 
-        if st.button("🧾\nالسندات"):
+        if st.button("💰 الصندوق"):
+            st.session_state.page = "cash"
+            st.rerun()
+
+        if st.button("🧾 السندات"):
             st.session_state.page = "receipts"
             st.rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # زر بالنص
-    if st.button("🗂️\nالمجموعات"):
-        st.session_state.page = "categories"
-        st.rerun()
+        if st.button("🗂️ المجموعات"):
+            st.session_state.page = "categories"
+            st.rerun()
 
 # ===== PAGES =====
 else:
 
-    if st.button("⬅️ رجوع"):
-        st.session_state.page = "home"
-        st.rerun()
+    col1, col2 = st.columns([1,5])
 
-    st.title("صفحة فاضية")
+    with col1:
+        if st.button("⬅️"):
+            st.session_state.page = "home"
+            st.rerun()
+
+    with col2:
+        st.title("صفحة قيد التطوير")
