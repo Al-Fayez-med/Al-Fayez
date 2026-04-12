@@ -1,13 +1,25 @@
+# =========================================
+# 📦 IMPORTS
+# =========================================
 import streamlit as st
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 
-st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
 
 # =========================================
-# 🔥 FIREBASE
+# ⚙️ PAGE CONFIG
+# =========================================
+st.set_page_config(
+    page_title="نظام إدارة المستودعات",
+    page_icon="💊",
+    layout="wide"
+)
+
+
+# =========================================
+# 🔥 FIREBASE (الاتصال)
 # =========================================
 @st.cache_resource
 def init_firebase():
@@ -19,18 +31,21 @@ def init_firebase():
 
 db = init_firebase()
 
+
 # =========================================
-# 📦 DATA
+# 📦 DATA (تحميل البيانات)
 # =========================================
 @st.cache_data
 def load_categories():
     docs = db.collection("categories").stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
+
 @st.cache_data
 def load_products():
     docs = db.collection("products").stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
+
 
 def generate_category_code():
     cats = load_categories()
@@ -39,82 +54,104 @@ def generate_category_code():
     max_code = max(int(c["code"]) for c in cats)
     return str(max_code + 1).zfill(3)
 
+
 # =========================================
-# 🎨 STYLE
+# 🎨 STYLE (التصميم)
 # =========================================
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
+
 .header {
     height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 .stButton > button {
     width: 90px;
     height: 90px;
     font-size: 40px;
     border-radius: 20px;
 }
+
 .label {
     text-align: left;
     color: white;
     font-size: 14px;
     margin-top: 5px;
 }
+
 .icon-block {
     margin-bottom: 30px;
 }
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================================
-# 🔁 NAVIGATION
+# 🔁 NAVIGATION (التنقل)
 # =========================================
 if "page" not in st.session_state:
     st.session_state.page = "home"
+
 
 # =========================================
 # 🧱 HEADER
 # =========================================
 def show_header():
-    st.markdown('<div class="header">🏪 اسم المستودع</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="header">🏪 اسم المستودع</div>',
+        unsafe_allow_html=True
+    )
+
 
 # =========================================
-# 🧩 ICON
+# 🧩 ICON COMPONENT
 # =========================================
 def icon(label, emoji, page):
     if st.button(emoji, key=page):
         st.session_state.page = page
         st.rerun()
-    st.markdown(f'<div class="label">{label}</div>', unsafe_allow_html=True)
+
+    st.markdown(
+        f'<div class="label">{label}</div>',
+        unsafe_allow_html=True
+    )
+
 
 # =========================================
-# 🏠 HOME
+# 🏠 HOME PAGE
 # =========================================
 def home_page():
+
     show_header()
+
+    # ===== الأيقونات =====
     icon("الأصناف", "📦", "products")
     icon("المجموعات", "🗂️", "categories")
 
+
 # =========================================
-# 🗂️ CATEGORIES (🔥 الجديد)
+# 🗂️ CATEGORIES SECTION
 # =========================================
 def categories_section():
 
-    # ===== رجوع =====
+    # ===== زر الرجوع =====
     if st.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
 
     st.title("🗂️ المجموعات")
 
+    # ===== تحميل البيانات =====
     categories = load_categories()
     products = load_products()
 
+    # ===== حالات التحكم =====
     if "open" not in st.session_state:
         st.session_state.open = None
 
@@ -127,19 +164,22 @@ def categories_section():
     if "delete" not in st.session_state:
         st.session_state.delete = None
 
+
     # =========================================
-    # ➕ زر الإضافة (فوق)
+    # ➕ زر إضافة مجموعة
     # =========================================
     if st.button("➕ إضافة مجموعة"):
         st.session_state.add_mode = True
 
     st.markdown("---")
 
+
     # =========================================
-    # 📁 عرض المجموعات
+    # 📁 عرض قائمة المجموعات
     # =========================================
     for c in categories:
 
+        # ===== اسم المجموعة =====
         if st.button(f"📁 {c['name']}", key=c["id"]):
 
             if st.session_state.open == c["id"]:
@@ -149,31 +189,46 @@ def categories_section():
 
             st.rerun()
 
+
+        # =========================================
+        # 📂 تفاصيل المجموعة (عند الفتح)
+        # =========================================
         if st.session_state.open == c["id"]:
 
+            # ===== الكود =====
             st.markdown(
                 f"<span style='color:gray'>الكود: {c['code']}</span>",
                 unsafe_allow_html=True
             )
 
-            count = sum(1 for p in products if p.get("category_code") == c["code"])
+            # ===== عدد الأصناف =====
+            count = sum(
+                1 for p in products
+                if p.get("category_code") == c["code"]
+            )
             st.write(f"عدد الأصناف: {count}")
 
-            # ===== أزرار =====
+
+            # =========================================
+            # 🔘 أزرار العمليات
+            # =========================================
             col1, col2, col3 = st.columns(3)
 
+            # تعديل
             with col1:
                 btn = st.button("✏️", key="e"+c["id"])
                 st.write("تعديل")
                 if btn:
                     st.session_state.edit = c["id"]
 
+            # حذف
             with col2:
                 btn = st.button("🗑️", key="d"+c["id"])
                 st.write("حذف")
                 if btn:
                     st.session_state.delete = c["id"]
 
+            # استعراض
             with col3:
                 btn = st.button("👁️", key="v"+c["id"])
                 st.write("استعراض")
@@ -183,8 +238,9 @@ def categories_section():
 
             st.markdown("---")
 
+
     # =========================================
-    # ➕ نافذة إضافة (Popup)
+    # ➕ إضافة مجموعة (POPUP)
     # =========================================
     if st.session_state.add_mode:
 
@@ -214,17 +270,24 @@ def categories_section():
                 st.session_state.add_mode = False
                 st.rerun()
 
+
     # =========================================
-    # ✏️ تعديل (Popup)
+    # ✏️ تعديل مجموعة (POPUP)
     # =========================================
     if st.session_state.edit:
 
-        cat = next((x for x in categories if x["id"] == st.session_state.edit), None)
+        cat = next(
+            (x for x in categories if x["id"] == st.session_state.edit),
+            None
+        )
 
         if cat:
             with st.modal("✏️ تعديل مجموعة"):
 
-                new_name = st.text_input("اسم المجموعة", value=cat["name"])
+                new_name = st.text_input(
+                    "اسم المجموعة",
+                    value=cat["name"]
+                )
 
                 st.markdown(
                     f"<span style='color:gray'>الكود: {cat['code']}</span>",
@@ -245,19 +308,26 @@ def categories_section():
                     st.session_state.edit = None
                     st.rerun()
 
+
     # =========================================
-    # 🗑️ حذف (Popup)
+    # 🗑️ حذف مجموعة (POPUP)
     # =========================================
     if st.session_state.delete:
 
-        cat = next((x for x in categories if x["id"] == st.session_state.delete), None)
+        cat = next(
+            (x for x in categories if x["id"] == st.session_state.delete),
+            None
+        )
 
         if cat:
             with st.modal("⚠️ تأكيد الحذف"):
 
                 st.warning(f"حذف {cat['name']}؟")
 
-                has_products = any(p.get("category_code") == cat["code"] for p in products)
+                has_products = any(
+                    p.get("category_code") == cat["code"]
+                    for p in products
+                )
 
                 if has_products:
                     st.error("❌ لا يمكن حذف مجموعة تحتوي على أصناف")
@@ -273,12 +343,14 @@ def categories_section():
                         st.session_state.delete = None
                         st.cache_data.clear()
                         st.rerun()
-    
+
+
 # =========================================
-# 💊 PRODUCTS
+# 💊 PRODUCTS SECTION
 # =========================================
 def products_section():
 
+    # ===== رجوع =====
     if st.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
@@ -290,8 +362,9 @@ def products_section():
     for p in products:
         st.write(p["name"])
 
+
 # =========================================
-# 🚀 ROUTER
+# 🚀 ROUTER (تحديد الصفحة)
 # =========================================
 if st.session_state.page == "home":
     home_page()
