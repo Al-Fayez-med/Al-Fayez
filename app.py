@@ -125,7 +125,6 @@ def products_section():
 # =========================================
 # ======= 🗂️ قسم المجموعات ================
 # =========================================
-
 # =========================================
 # ======= 🗂️ قسم المجموعات ================
 # =========================================
@@ -140,11 +139,10 @@ def generate_category_code():
 
 def categories_section():
 
-    # ====== بيانات مؤقتة (لحد ما نربط فايربيس) ======
+    # ====== بيانات مؤقتة ======
     if "categories_data" not in st.session_state:
         st.session_state.categories_data = []
 
-    # ====== حالات النوافذ ======
     if "show_add" not in st.session_state:
         st.session_state.show_add = False
 
@@ -161,50 +159,63 @@ def categories_section():
 
     st.title("🗂️ إدارة المجموعات")
 
-    # =========================================
-    # ======= ➕ زر إضافة ======================
-    # =========================================
-
+    # ====== زر إضافة ======
     if st.button("➕ إضافة مجموعة"):
         st.session_state.show_add = True
 
     st.markdown("---")
 
     # =========================================
-    # ======= 📋 جدول المجموعات ===============
+    # ======= 🎨 جدول HTML ====================
     # =========================================
 
-    col1, col2, col3, col4, col5 = st.columns([3,1,1,1,1])
+    st.markdown("""
+    <style>
+    .table { width:100%; color:white; font-size:14px; }
+    .row {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:10px 5px;
+        border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    .header {
+        font-weight:bold;
+        border-bottom:2px solid rgba(255,255,255,0.3);
+    }
+    .cell { flex:1; text-align:left; }
+    .code { color:rgba(255,255,255,0.5); }
+    </style>
+    """, unsafe_allow_html=True)
 
-    col1.write("الاسم")
-    col2.write("الكود")
-    col3.write("عدد الأصناف")
-    col4.write("تعديل")
-    col5.write("حذف")
+    # ===== Header =====
+    st.markdown("""
+    <div class="row header">
+        <div class="cell">الاسم</div>
+        <div class="cell">الكود</div>
+        <div class="cell">عدد الأصناف</div>
+        <div class="cell">تعديل</div>
+        <div class="cell">حذف</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("---")
-
+    # ===== Rows =====
     for i, c in enumerate(st.session_state.categories_data):
 
-        col1, col2, col3, col4, col5 = st.columns([3,1,1,1,1])
+        cols = st.columns([3,1,1,1,1])
 
-        col1.write(c["name"])
+        cols[0].write(c["name"])
+        cols[1].markdown(f"<span class='code'>{c['code']}</span>", unsafe_allow_html=True)
+        cols[2].write("0")
 
-        col2.markdown(
-            f"<span style='color:rgba(255,255,255,0.5)'>{c['code']}</span>",
-            unsafe_allow_html=True
-        )
-
-        col3.write("0")  # لاحقاً رح يصير ديناميكي
-
-        if col4.button("✏️", key=f"edit_{i}"):
+        if cols[3].button("✏️", key=f"edit_{i}"):
             st.session_state.edit_id = i
 
-        if col5.button("🗑️", key=f"del_{i}"):
+        if cols[4].button("🗑️", key=f"del_{i}"):
             st.session_state.delete_id = i
 
     # =========================================
-    # ======= 🟢 إضافة مجموعة =================
+    # ======= ➕ إضافة ========================
     # =========================================
 
     if st.session_state.show_add:
@@ -215,10 +226,7 @@ def categories_section():
 
         code = generate_category_code()
 
-        st.markdown(
-            f"الكود: <span style='color:gray'>{code}</span>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"الكود: <span style='color:gray'>{code}</span>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
 
@@ -236,7 +244,7 @@ def categories_section():
             st.rerun()
 
     # =========================================
-    # ======= 🟡 تعديل مجموعة =================
+    # ======= ✏️ تعديل ========================
     # =========================================
 
     if st.session_state.edit_id is not None:
@@ -247,10 +255,7 @@ def categories_section():
 
         new_name = st.text_input("اسم المجموعة", value=c["name"])
 
-        st.markdown(
-            f"الكود: <span style='color:gray'>{c['code']}</span>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"الكود: <span style='color:gray'>{c['code']}</span>", unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
 
@@ -265,7 +270,7 @@ def categories_section():
             st.rerun()
 
     # =========================================
-    # ======= 🔴 حذف مجموعة ==================
+    # ======= 🗑️ حذف =========================
     # =========================================
 
     if st.session_state.delete_id is not None:
@@ -281,11 +286,9 @@ def categories_section():
             st.rerun()
 
         if col2.button("تأكيد"):
-            # حالياً بدون تحقق (لحد ما نربط الأصناف)
             st.session_state.categories_data.pop(st.session_state.delete_id)
             st.session_state.delete_id = None
             st.rerun()
-
 # =========================================
 # ======= 👥 قسم الموردين =================
 # =========================================
