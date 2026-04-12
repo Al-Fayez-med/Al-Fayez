@@ -126,13 +126,165 @@ def products_section():
 # ======= 🗂️ قسم المجموعات ================
 # =========================================
 
+# =========================================
+# ======= 🗂️ قسم المجموعات ================
+# =========================================
+
+def generate_category_code():
+    categories = st.session_state.get("categories_data", [])
+    if not categories:
+        return "001"
+    max_code = max(int(c["code"]) for c in categories)
+    return str(max_code + 1).zfill(3)
+
+
 def categories_section():
 
+    # ====== بيانات مؤقتة (لحد ما نربط فايربيس) ======
+    if "categories_data" not in st.session_state:
+        st.session_state.categories_data = []
+
+    # ====== حالات النوافذ ======
+    if "show_add" not in st.session_state:
+        st.session_state.show_add = False
+
+    if "edit_id" not in st.session_state:
+        st.session_state.edit_id = None
+
+    if "delete_id" not in st.session_state:
+        st.session_state.delete_id = None
+
+    # ====== رجوع ======
     if st.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
 
-    st.title("🗂️ المجموعات")
+    st.title("🗂️ إدارة المجموعات")
+
+    # =========================================
+    # ======= ➕ زر إضافة ======================
+    # =========================================
+
+    if st.button("➕ إضافة مجموعة"):
+        st.session_state.show_add = True
+
+    st.markdown("---")
+
+    # =========================================
+    # ======= 📋 جدول المجموعات ===============
+    # =========================================
+
+    col1, col2, col3, col4, col5 = st.columns([3,1,1,1,1])
+
+    col1.write("الاسم")
+    col2.write("الكود")
+    col3.write("عدد الأصناف")
+    col4.write("تعديل")
+    col5.write("حذف")
+
+    st.markdown("---")
+
+    for i, c in enumerate(st.session_state.categories_data):
+
+        col1, col2, col3, col4, col5 = st.columns([3,1,1,1,1])
+
+        col1.write(c["name"])
+
+        col2.markdown(
+            f"<span style='color:rgba(255,255,255,0.5)'>{c['code']}</span>",
+            unsafe_allow_html=True
+        )
+
+        col3.write("0")  # لاحقاً رح يصير ديناميكي
+
+        if col4.button("✏️", key=f"edit_{i}"):
+            st.session_state.edit_id = i
+
+        if col5.button("🗑️", key=f"del_{i}"):
+            st.session_state.delete_id = i
+
+    # =========================================
+    # ======= 🟢 إضافة مجموعة =================
+    # =========================================
+
+    if st.session_state.show_add:
+
+        st.markdown("### ➕ إضافة مجموعة")
+
+        name = st.text_input("اسم المجموعة")
+
+        code = generate_category_code()
+
+        st.markdown(
+            f"الكود: <span style='color:gray'>{code}</span>",
+            unsafe_allow_html=True
+        )
+
+        col1, col2 = st.columns(2)
+
+        if col1.button("موافق"):
+            if name:
+                st.session_state.categories_data.append({
+                    "name": name,
+                    "code": code
+                })
+                st.session_state.show_add = False
+                st.rerun()
+
+        if col2.button("إلغاء"):
+            st.session_state.show_add = False
+            st.rerun()
+
+    # =========================================
+    # ======= 🟡 تعديل مجموعة =================
+    # =========================================
+
+    if st.session_state.edit_id is not None:
+
+        c = st.session_state.categories_data[st.session_state.edit_id]
+
+        st.markdown("### ✏️ تعديل مجموعة")
+
+        new_name = st.text_input("اسم المجموعة", value=c["name"])
+
+        st.markdown(
+            f"الكود: <span style='color:gray'>{c['code']}</span>",
+            unsafe_allow_html=True
+        )
+
+        col1, col2 = st.columns(2)
+
+        if col1.button("موافق"):
+            if new_name:
+                c["name"] = new_name
+                st.session_state.edit_id = None
+                st.rerun()
+
+        if col2.button("إلغاء"):
+            st.session_state.edit_id = None
+            st.rerun()
+
+    # =========================================
+    # ======= 🔴 حذف مجموعة ==================
+    # =========================================
+
+    if st.session_state.delete_id is not None:
+
+        c = st.session_state.categories_data[st.session_state.delete_id]
+
+        st.warning(f"⚠️ حذف المجموعة: {c['name']} ؟")
+
+        col1, col2 = st.columns(2)
+
+        if col1.button("إلغاء"):
+            st.session_state.delete_id = None
+            st.rerun()
+
+        if col2.button("تأكيد"):
+            # حالياً بدون تحقق (لحد ما نربط الأصناف)
+            st.session_state.categories_data.pop(st.session_state.delete_id)
+            st.session_state.delete_id = None
+            st.rerun()
 
 # =========================================
 # ======= 👥 قسم الموردين =================
