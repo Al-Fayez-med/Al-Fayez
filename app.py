@@ -315,39 +315,24 @@ def categories_section():
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            # ===== صف واحد يحتوي على الكود والأزرار =====
-            st.markdown(f"""
-            <div class="actions-row">
-                <div class="code-item">
-                    <div class="code-display">الكود: {c['code']}</div>
-                </div>
-                <div class="action-item">
-                    <div class="action-btn" id="edit_btn_{c['id']}"></div>
-                    <div class="action-label">تعديل</div>
-                </div>
-                <div class="action-item">
-                    <div class="action-btn" id="del_btn_{c['id']}"></div>
-                    <div class="action-label">حذف</div>
-                </div>
-                <div class="action-item">
-                    <div class="action-btn" id="view_btn_{c['id']}"></div>
-                    <div class="action-label">استعراض</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # ===== عرض الكود =====
+            st.markdown(f'<div class="code-display" style="margin-bottom: 15px;">الكود: {c["code"]}</div>', unsafe_allow_html=True)
             
-            # الأزرار الفعلية (مخفية لكنها تعمل)
+            # ===== الأزرار مع المسميات بجانبها في صف واحد =====
             col_btn1, col_btn2, col_btn3 = st.columns(3)
+            
             with col_btn1:
-                if st.button("✏️", key=f"edit_btn_{c['id']}", help="تعديل"):
+                if st.button("✏️ تعديل", key=f"edit_btn_{c['id']}", use_container_width=True):
                     st.session_state.edit_id = c["id"]
                     st.rerun()
+                    
             with col_btn2:
-                if st.button("🗑️", key=f"del_btn_{c['id']}", help="حذف"):
+                if st.button("🗑️ حذف", key=f"del_btn_{c['id']}", use_container_width=True):
                     st.session_state.delete_id = c["id"]
                     st.rerun()
+                    
             with col_btn3:
-                if st.button("👁️", key=f"view_btn_{c['id']}", help="استعراض الأصناف"):
+                if st.button("👁️ استعراض", key=f"view_btn_{c['id']}", use_container_width=True):
                     st.session_state.page = "products"
                     st.rerun()
 
