@@ -141,6 +141,33 @@ def home_page():
 
 def categories_section():
 
+    # ===== CSS =====
+    st.markdown("""
+    <style>
+    .group-btn button {
+        width: 100% !important;
+        height: 60px !important;
+        text-align: right !important;
+        font-size: 18px !important;
+        border-radius: 12px !important;
+    }
+
+    .action-btn button {
+        width: 60px !important;
+        height: 60px !important;
+        border-radius: 12px !important;
+        font-size: 20px !important;
+        padding: 0 !important;
+    }
+
+    .action-label {
+        font-size: 12px;
+        opacity: 0.5;
+        margin-top: 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # ===== رجوع =====
     if st.button("⬅️"):
         st.session_state.page = "home"
@@ -151,7 +178,7 @@ def categories_section():
     categories = load_categories()
     products = load_products()
 
-    # ===== حالات =====
+    # ===== state =====
     if "open" not in st.session_state:
         st.session_state.open = None
 
@@ -165,20 +192,20 @@ def categories_section():
         st.session_state.delete_id = None
 
     # =========================================
-    # ➕ إضافة مجموعة
+    # ➕ إضافة
     # =========================================
     if st.button("➕ إضافة مجموعة"):
         st.session_state.add_mode = True
 
-    # ===== نموذج الإضافة =====
+    # ===== form إضافة =====
     if st.session_state.add_mode:
 
-        name = st.text_input("اسم المجموعة")
+        name = st.text_input("اسم المجموعة", key="add_name")
         code = generate_category_code()
 
-        st.markdown(f"<span style='color:gray'>الكود: {code}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='opacity:0.5'>الكود: {code}</span>", unsafe_allow_html=True)
 
-        col1, col2 = st.columns([1,1])
+        col1, col2 = st.columns(2)
 
         with col1:
             if st.button("✔️"):
@@ -199,62 +226,70 @@ def categories_section():
     st.markdown("---")
 
     # =========================================
-    # 📁 عرض المجموعات
+    # 📁 عرض
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة (أفقي) =====
-        if st.button(f"📁 {c['name']}", key=c["id"]):
+        # ===== زر المجموعة =====
+        with st.container():
+            st.markdown('<div class="group-btn">', unsafe_allow_html=True)
 
-            if st.session_state.open == c["id"]:
-                st.session_state.open = None
-            else:
-                st.session_state.open = c["id"]
+            if st.button(f"📁 {c['name']}", key=f"group_{c['id']}"):
+                if st.session_state.open == c["id"]:
+                    st.session_state.open = None
+                else:
+                    st.session_state.open = c["id"]
+                st.rerun()
 
-            st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # =========================================
-        # 📂 تفاصيل المجموعة
-        # =========================================
+        # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            st.markdown(f"<span style='color:gray'>الكود: {c['code']}</span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='opacity:0.5'>الكود: {c['code']}</span>", unsafe_allow_html=True)
 
             count = sum(1 for p in products if p.get("category_code") == c["code"])
             st.write(f"عدد الأصناف: {count}")
 
-            # ===== أزرار العمليات =====
+            # ===== أزرار =====
             col1, col2, col3 = st.columns(3)
 
+            # ===== تعديل =====
             with col1:
-                if st.button("✏️", key="e"+c["id"]):
+                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+                if st.button("✏️", key=f"edit_btn_{c['id']}"):
                     st.session_state.edit_id = c["id"]
-                st.markdown("<small style='opacity:0.5'>تعديل</small>", unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="action-label">تعديل</div>', unsafe_allow_html=True)
 
+            # ===== حذف =====
             with col2:
-                if st.button("🗑️", key="d"+c["id"]):
+                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+                if st.button("🗑️", key=f"del_btn_{c['id']}"):
                     st.session_state.delete_id = c["id"]
-                st.markdown("<small style='opacity:0.5'>حذف</small>", unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="action-label">حذف</div>', unsafe_allow_html=True)
 
+            # ===== استعراض =====
             with col3:
-                if st.button("👁️", key="v"+c["id"]):
+                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+                if st.button("👁️", key=f"view_btn_{c['id']}"):
                     st.session_state.page = "products"
                     st.rerun()
-                st.markdown("<small style='opacity:0.5'>استعراض</small>", unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="action-label">استعراض</div>', unsafe_allow_html=True)
 
             # =========================================
-            # ✏️ تعديل
+            # ✏️ تعديل inline
             # =========================================
             if st.session_state.edit_id == c["id"]:
 
-                new_name = st.text_input("تعديل الاسم", value=c["name"], key="edit_name")
+                new_name = st.text_input("اسم جديد", value=c["name"], key=f"edit_input_{c['id']}")
 
-                st.markdown(f"<span style='color:gray'>الكود: {c['code']}</span>", unsafe_allow_html=True)
+                colA, colB = st.columns(2)
 
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    if st.button("✔️", key="save"+c["id"]):
+                with colA:
+                    if st.button("✔️", key=f"save_{c['id']}"):
                         db.collection("categories").document(c["id"]).update({
                             "name": new_name
                         })
@@ -262,36 +297,36 @@ def categories_section():
                         st.cache_data.clear()
                         st.rerun()
 
-                with col2:
-                    if st.button("❌", key="cancel_edit"+c["id"]):
+                with colB:
+                    if st.button("❌", key=f"cancel_edit_{c['id']}"):
                         st.session_state.edit_id = None
                         st.rerun()
 
             # =========================================
-            # 🗑️ حذف
+            # 🗑️ حذف inline
             # =========================================
             if st.session_state.delete_id == c["id"]:
 
-                st.warning(f"هل أنت متأكد من حذف {c['name']} ؟")
+                st.warning(f"حذف {c['name']}؟")
 
-                has_products = any(p.get("category_code") == c["code"] for p in products)
+                colA, colB = st.columns(2)
 
-                if has_products:
-                    st.error("❌ لا يمكن حذف مجموعة تحتوي على أصناف")
-                else:
-                    col1, col2 = st.columns(2)
+                with colA:
+                    if st.button("✔️", key=f"confirm_del_{c['id']}"):
+                        has_products = any(p.get("category_code") == c["code"] for p in products)
 
-                    with col1:
-                        if st.button("✔️", key="confirm"+c["id"]):
+                        if has_products:
+                            st.error("لا يمكن حذف مجموعة فيها أصناف")
+                        else:
                             db.collection("categories").document(c["id"]).delete()
                             st.session_state.delete_id = None
                             st.cache_data.clear()
                             st.rerun()
 
-                    with col2:
-                        if st.button("❌", key="cancel_del"+c["id"]):
-                            st.session_state.delete_id = None
-                            st.rerun()
+                with colB:
+                    if st.button("❌", key=f"cancel_del_{c['id']}"):
+                        st.session_state.delete_id = None
+                        st.rerun()
 
             st.markdown("---")
 # =========================================
