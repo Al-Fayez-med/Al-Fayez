@@ -144,29 +144,8 @@ def categories_section():
     # ===== CSS =====
     st.markdown("""
     <style>
-    /* تنسيق زر إضافة مجموعة */
-    div[data-testid="column"]:has(button[key="open_add_category"]) {
-        display: flex;
-        justify-content: flex-start;
-    }
-    
-    button[key="open_add_category"] {
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 15px !important;
-        font-size: 30px !important;
-        padding: 0 !important;
-        background-color: #3b82f6 !important;
-        color: white !important;
-        border: none !important;
-    }
-    
-    button[key="open_add_category"]:hover {
-        background-color: #2563eb !important;
-    }
-    
-    /* تنسيق زر المجموعة (ارتفاع 30 بكسل) */
-    button[key^="group_"] {
+    /* تنسيق جميع الأزرار بشكل عام (ارتفاع 30 بكسل) */
+    div[data-testid="stButton"] button {
         height: 30px !important;
         border-radius: 8px !important;
         font-size: 14px !important;
@@ -177,20 +156,35 @@ def categories_section():
         width: auto !important;
         min-width: fit-content !important;
     }
-
+    
+    /* تنسيق زر إضافة مجموعة (60x60) */
+    button[key="open_add_category"] {
+        width: 60px !important;
+        height: 60px !important;
+        border-radius: 15px !important;
+        font-size: 30px !important;
+        padding: 0 !important;
+        background-color: #3b82f6 !important;
+    }
+    
+    button[key="open_add_category"]:hover {
+        background-color: #2563eb !important;
+    }
+    
     /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) */
-    .action-btn button {
+    button[key^="edit_btn_"], button[key^="del_btn_"], button[key^="view_btn_"] {
         width: 60px !important;
         height: 60px !important;
         border-radius: 12px !important;
         font-size: 20px !important;
         padding: 0 !important;
+        background-color: #3b82f6 !important;
     }
-
+    
     /* تنسيق حقل الكود غير القابل للتعديل */
     .code-display {
         background-color: #1e3a8a;
-        padding: 8px 12px;
+        padding: 6px 12px;
         border-radius: 8px;
         color: #94a3b8;
         font-size: 14px;
@@ -250,7 +244,7 @@ def categories_section():
         st.session_state.delete_id = None
 
     # =========================================
-    # ➕ إضافة مجموعة (زر صغير 60x60)
+    # ➕ إضافة مجموعة
     # =========================================
     col_add1, col_add2 = st.columns([1, 10])
     with col_add1:
@@ -310,25 +304,25 @@ def categories_section():
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            # ===== صف واحد يحتوي على الكود والأزرار (بدون مسميات) =====
+            # ===== صف واحد يحتوي على الكود والأزرار =====
             st.markdown(f"""
             <div class="actions-row">
                 <div class="code-item">
                     <div class="code-display">الكود: {c['code']}</div>
                 </div>
                 <div class="action-item">
-                    <div class="action-btn" id="edit_btn_{c['id']}"></div>
+                    <div class="action-btn"></div>
                 </div>
                 <div class="action-item">
-                    <div class="action-btn" id="del_btn_{c['id']}"></div>
+                    <div class="action-btn"></div>
                 </div>
                 <div class="action-item">
-                    <div class="action-btn" id="view_btn_{c['id']}"></div>
+                    <div class="action-btn"></div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-            # الأزرار الفعلية (مخفية لكنها تعمل)
+            # الأزرار الفعلية
             col_btn1, col_btn2, col_btn3 = st.columns(3)
             with col_btn1:
                 if st.button("✏️", key=f"edit_btn_{c['id']}", help="تعديل"):
