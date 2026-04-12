@@ -139,90 +139,7 @@ def home_page():
 # 🗂️ CATEGORIES SECTION
 # =========================================
 
-
 def categories_section():
-
-    # ===== CSS =====
-    st.markdown("""
-    <style>
-    /* تنسيق زر إضافة مجموعة */
-    div[data-testid="column"]:has(button[key="open_add_category"]) {
-        display: flex;
-        justify-content: flex-start;
-    }
-    
-    button[key="open_add_category"] {
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 15px !important;
-        font-size: 30px !important;
-        padding: 0 !important;
-        background-color: #3b82f6 !important;
-        color: white !important;
-        border: none !important;
-    }
-    
-    button[key="open_add_category"]:hover {
-        background-color: #2563eb !important;
-    }
-    
-    /* تنسيق أزرار المجموعات */
-    .group-btn button {
-        width: 100% !important;
-        height: 60px !important;
-        text-align: right !important;
-        font-size: 18px !important;
-        border-radius: 12px !important;
-    }
-
-    /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) */
-    .action-btn button {
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 12px !important;
-        font-size: 20px !important;
-        padding: 0 !important;
-    }
-
-    .action-label {
-        font-size: 12px;
-        opacity: 0.5;
-        margin-top: 5px;
-        text-align: center;
-    }
-    
-    /* تنسيق حقل الكود غير القابل للتعديل */
-    .code-display {
-        background-color: #1e3a8a;
-        padding: 8px 12px;
-        border-radius: 8px;
-        color: #94a3b8;
-        font-size: 14px;
-        text-align: center;
-    }
-    
-    /* تنسيق صف الإجراءات */
-    .actions-row {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .code-item {
-        flex: 2;
-        min-width: 100px;
-    }
-    
-    .action-item {
-        flex: 1;
-        min-width: 70px;
-        text-align: center;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
     # ===== رجوع =====
     col_back, col_spacer = st.columns([1, 10])
@@ -250,14 +167,14 @@ def categories_section():
         st.session_state.delete_id = None
 
     # =========================================
-    # ➕ إضافة مجموعة (زر صغير 60x60)
+    # ➕ إضافة مجموعة
     # =========================================
     col_add1, col_add2 = st.columns([1, 10])
     with col_add1:
         if st.button("➕", key="open_add_category"):
             st.session_state.add_mode = True
 
-    # ===== نافذة إضافة مجموعة =====
+    # ===== نموذج إضافة مجموعة =====
     if st.session_state.add_mode:
 
         st.markdown("---")
@@ -266,11 +183,11 @@ def categories_section():
         col_name, col_code = st.columns([2, 1])
         
         with col_name:
-            new_category_name = st.text_input("اسم المجموعة", key="add_category_name", placeholder="أدخل اسم المجموعة")
+            new_category_name = st.text_input("اسم المجموعة", key="add_category_name")
         
         with col_code:
             new_category_code = generate_category_code()
-            st.markdown(f'<div class="code-display">الكود: {new_category_code}</div>', unsafe_allow_html=True)
+            st.text_input("الكود", value=new_category_code, key="add_category_code", disabled=True)
         
         col_ok, col_cancel = st.columns(2)
         
@@ -294,6 +211,106 @@ def categories_section():
         
         st.markdown("---")
 
+    # =========================================
+    # 📁 عرض المجموعات
+    # =========================================
+    for c in categories:
+
+        # زر المجموعة
+        if st.button(f"📁 {c['name']}", key=f"group_{c['id']}", use_container_width=True):
+            if st.session_state.open == c["id"]:
+                st.session_state.open = None
+            else:
+                st.session_state.open = c["id"]
+            st.rerun()
+
+        # التفاصيل (تظهر عند فتح المجموعة)
+        if st.session_state.open == c["id"]:
+
+            # عرض الكود
+            st.text_input("الكود", value=c["code"], key=f"code_{c['id']}", disabled=True)
+            
+            # الأزرار مع المسميات بجانبها (صف واحد)
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if st.button("✏️", key=f"edit_btn_{c['id']}", use_container_width=True):
+                    st.session_state.edit_id = c["id"]
+                    st.rerun()
+                st.caption("تعديل")
+                    
+            with col2:
+                if st.button("🗑️", key=f"del_btn_{c['id']}", use_container_width=True):
+                    st.session_state.delete_id = c["id"]
+                    st.rerun()
+                st.caption("حذف")
+                    
+            with col3:
+                if st.button("👁️", key=f"view_btn_{c['id']}", use_container_width=True):
+                    st.session_state.page = "products"
+                    st.rerun()
+                st.caption("استعراض")
+
+            # عرض عدد الأصناف
+            count = sum(1 for p in products if p.get("category_code") == c["code"])
+            st.caption(f"📊 عدد الأصناف: {count}")
+
+            # =========================================
+            # ✏️ تعديل
+            # =========================================
+            if st.session_state.edit_id == c["id"]:
+
+                st.markdown("---")
+                st.markdown("#### ✏️ تعديل المجموعة")
+                
+                new_name = st.text_input("اسم جديد", value=c["name"], key=f"edit_input_{c['id']}")
+                
+                st.text_input("الكود", value=c["code"], key=f"edit_code_{c['id']}", disabled=True)
+
+                colA, colB = st.columns(2)
+
+                with colA:
+                    if st.button("✔️ حفظ", key=f"save_{c['id']}", use_container_width=True):
+                        db.collection("categories").document(c["id"]).update({
+                            "name": new_name
+                        })
+                        st.session_state.edit_id = None
+                        st.cache_data.clear()
+                        st.rerun()
+
+                with colB:
+                    if st.button("❌ إلغاء", key=f"cancel_edit_{c['id']}", use_container_width=True):
+                        st.session_state.edit_id = None
+                        st.rerun()
+
+            # =========================================
+            # 🗑️ حذف
+            # =========================================
+            if st.session_state.delete_id == c["id"]:
+
+                st.markdown("---")
+                st.warning(f"⚠️ هل أنت متأكد من حذف مجموعة '{c['name']}'؟")
+
+                has_products = any(p.get("category_code") == c["code"] for p in products)
+
+                if has_products:
+                    st.error("❌ لا يمكن حذف مجموعة تحتوي على أصناف")
+
+                colA, colB = st.columns(2)
+
+                with colA:
+                    if st.button("✔️ نعم، احذف", key=f"confirm_del_{c['id']}", use_container_width=True, disabled=has_products):
+                        db.collection("categories").document(c["id"]).delete()
+                        st.session_state.delete_id = None
+                        st.cache_data.clear()
+                        st.rerun()
+
+                with colB:
+                    if st.button("❌ إلغاء", key=f"cancel_del_{c['id']}", use_container_width=True):
+                        st.session_state.delete_id = None
+                        st.rerun()
+
+            st.markdown("---")
     # =========================================
     # 📁 عرض المجموعات
     # =========================================
