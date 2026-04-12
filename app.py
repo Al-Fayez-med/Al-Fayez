@@ -5,128 +5,130 @@ from firebase_admin import credentials, firestore
 import json
 
 st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
-if "page" not in st.session_state:
-    st.session_state.page = "home"
+st.components.v1.html("""
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin:0;
+  background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
+  direction: rtl;
+  font-family: Arial;
+  color:white;
+}
 
-if st.session_state.page == "home":
+.container {
+  display:grid;
+  grid-template-columns: repeat(2,1fr);
+  gap:30px;
+  padding:25px;
+}
 
-    st.components.v1.html("""
-    <!DOCTYPE html>
-    <html lang="ar">
-    <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-    body {
-      margin:0;
-      background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
-      direction: rtl;
-      font-family: Arial;
-      color:white;
-    }
+.item {
+  text-align:center;
+}
 
-    .container {
-      display:grid;
-      grid-template-columns: repeat(2,1fr);
-      gap:30px;
-      padding:25px;
-    }
+.full {
+  grid-column: span 2;
+}
 
-    .item {
-      text-align:center;
-    }
+.icon-box {
+  width:85px;
+  height:85px;
+  margin:auto;
+  border:2px solid rgba(255,255,255,0.6);
+  border-radius:22px;
 
-    .icon-box {
-      width:85px;
-      height:85px;
-      margin:auto;
-      border:2px solid rgba(255,255,255,0.6);
-      border-radius:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 
-      display:flex;
-      align-items:center;
-      justify-content:center;
+  transition:0.15s;
+}
 
-      transition:0.15s;
-    }
+.icon-box:active {
+  transform:scale(1.1);
+}
 
-    .icon-box:active {
-      transform:scale(1.1);
-    }
+.icon-box svg {
+  width:42px;
+  height:42px;
+  stroke:rgba(255,255,255,0.75);
+}
 
-    .icon-box svg {
-      width:42px;
-      height:42px;
-      stroke:rgba(255,255,255,0.75);
-    }
+.label {
+  margin-top:10px;
+  font-size:14px;
+}
+</style>
+</head>
 
-    .label {
-      margin-top:10px;
-      font-size:14px;
-    }
-    </style>
-    </head>
+<body>
 
-    <body>
+<div class="container">
 
-    <div class="container">
+  <!-- الصف الأول -->
+  <div class="item">
+    <div class="icon-box"><i data-lucide="user"></i></div>
+    <div class="label">ملفي الشخصي</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="user"></i></div>
-        <div class="label">ملفي</div>
-      </div>
+  <div class="item">
+    <div class="icon-box"><i data-lucide="settings"></i></div>
+    <div class="label">الضبط</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="settings"></i></div>
-        <div class="label">الضبط</div>
-      </div>
+  <!-- الصف الثاني -->
+  <div class="item">
+    <div class="icon-box"><i data-lucide="cross"></i></div>
+    <div class="label">الصيدليات</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="cross"></i></div>
-        <div class="label">الصيدليات</div>
-      </div>
+  <div class="item">
+    <div class="icon-box"><i data-lucide="users"></i></div>
+    <div class="label">الموردين</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="box"></i></div>
-        <div class="label">الأصناف</div>
-      </div>
+  <!-- الصف الثالث -->
+  <div class="item">
+    <div class="icon-box"><i data-lucide="box"></i></div>
+    <div class="label">الأصناف</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="layers"></i></div>
-        <div class="label">المجموعات</div>
-      </div>
+  <div class="item">
+    <div class="icon-box"><i data-lucide="layers"></i></div>
+    <div class="label">المجموعات</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="users"></i></div>
-        <div class="label">الموردين</div>
-      </div>
+  <!-- الصف الرابع -->
+  <div class="item">
+    <div class="icon-box"><i data-lucide="warehouse"></i></div>
+    <div class="label">المستودعات</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="warehouse"></i></div>
-        <div class="label">المستودعات</div>
-      </div>
+  <div class="item">
+    <div class="icon-box"><i data-lucide="banknote"></i></div>
+    <div class="label">الصندوق</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="banknote"></i></div>
-        <div class="label">الصندوق</div>
-      </div>
+  <!-- الصف الأخير (بالنص) -->
+  <div class="item full">
+    <div class="icon-box"><i data-lucide="receipt"></i></div>
+    <div class="label">السندات</div>
+  </div>
 
-      <div class="item">
-        <div class="icon-box"><i data-lucide="receipt"></i></div>
-        <div class="label">السندات</div>
-      </div>
+</div>
 
-    </div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+lucide.createIcons();
+</script>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-    lucide.createIcons();
-    </script>
-
-    </body>
-    </html>
-    """, height=700)
-
-    st.stop()
+</body>
+</html>
+""", height=750)
 # ================= Firebase =================
 @st.cache_resource
 def init_firebase():
