@@ -173,22 +173,6 @@ def categories_section():
         font-size: 18px !important;
         border-radius: 12px !important;
     }
-
-    /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) */
-    .action-btn button {
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 12px !important;
-        font-size: 20px !important;
-        padding: 0 !important;
-    }
-
-    .action-label {
-        font-size: 12px;
-        opacity: 0.5;
-        margin-top: 5px;
-        text-align: center;
-    }
     
     /* تنسيق حقل الكود غير القابل للتعديل */
     .code-display {
@@ -197,27 +181,6 @@ def categories_section():
         border-radius: 8px;
         color: #94a3b8;
         font-size: 14px;
-        text-align: center;
-    }
-    
-    /* تنسيق صف الإجراءات */
-    .actions-row {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .code-item {
-        flex: 2;
-        min-width: 100px;
-    }
-    
-    .action-item {
-        flex: 1;
-        min-width: 70px;
         text-align: center;
     }
     </style>
@@ -314,41 +277,35 @@ def categories_section():
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            # ===== صف واحد يحتوي على الكود والأزرار =====
-            st.markdown(f"""
-            <div class="actions-row">
-                <div class="code-item">
-                    <div class="code-display">الكود: {c['code']}</div>
-                </div>
-                <div class="action-item">
-                    <div class="action-btn" id="edit_btn_{c['id']}"></div>
-                    <div class="action-label">تعديل</div>
-                </div>
-                <div class="action-item">
-                    <div class="action-btn" id="del_btn_{c['id']}"></div>
-                    <div class="action-label">حذف</div>
-                </div>
-                <div class="action-item">
-                    <div class="action-btn" id="view_btn_{c['id']}"></div>
-                    <div class="action-label">استعراض</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # عرض الكود
+            st.markdown(f'<div class="code-display">الكود: {c["code"]}</div>', unsafe_allow_html=True)
             
-            # الأزرار الفعلية (مخفية لكنها تعمل)
-            col_btn1, col_btn2, col_btn3 = st.columns(3)
-            with col_btn1:
-                if st.button("✏️", key=f"edit_btn_{c['id']}", help="تعديل"):
+            # ===== زر تعديل =====
+            col1, col2 = st.columns([1, 5])
+            with col1:
+                if st.button("✏️", key=f"edit_btn_{c['id']}"):
                     st.session_state.edit_id = c["id"]
                     st.rerun()
-            with col_btn2:
-                if st.button("🗑️", key=f"del_btn_{c['id']}", help="حذف"):
+            with col2:
+                st.write("تعديل")
+            
+            # ===== زر حذف =====
+            col1, col2 = st.columns([1, 5])
+            with col1:
+                if st.button("🗑️", key=f"del_btn_{c['id']}"):
                     st.session_state.delete_id = c["id"]
                     st.rerun()
-            with col_btn3:
-                if st.button("👁️", key=f"view_btn_{c['id']}", help="استعراض الأصناف"):
+            with col2:
+                st.write("حذف")
+            
+            # ===== زر استعراض =====
+            col1, col2 = st.columns([1, 5])
+            with col1:
+                if st.button("👁️", key=f"view_btn_{c['id']}"):
                     st.session_state.page = "products"
                     st.rerun()
+            with col2:
+                st.write("استعراض")
 
             # عرض عدد الأصناف
             count = sum(1 for p in products if p.get("category_code") == c["code"])
