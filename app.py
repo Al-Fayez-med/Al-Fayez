@@ -10,11 +10,11 @@ st.markdown("""
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
-/* زر مربع */
+/* الزر مربع */
 .stButton > button {
     width: 90px;
     height: 90px;
-    font-size: 40px;
+    font-size: 38px;
     border-radius: 20px;
     border: 2px solid rgba(255,255,255,0.5);
     background: rgba(255,255,255,0.05);
@@ -27,8 +27,8 @@ st.markdown("""
     text-align: center;
     color: white;
     font-size: 14px;
-    margin-top: 5px;
-    margin-bottom: 20px;
+    margin-top: 0px;
+    margin-bottom: 15px;
 }
 
 </style>
@@ -45,29 +45,24 @@ if st.session_state.page == "home":
 
     with center:
 
-        # ===== أيقونة 1 =====
-        c1, c2, c3 = st.columns(3)
-        with c2:
-            if st.button("📦"):
-                st.session_state.page = "products"
-                st.rerun()
-            st.markdown('<div class="label">الأصناف</div>', unsafe_allow_html=True)
+        def icon(label, emoji, page):
+            c1, c2, c3 = st.columns(3)
+            with c2:
+                if st.button(emoji, key=page):
+                    st.session_state.page = page
+                    st.rerun()
+                st.markdown(f'<div class="label">{label}</div>', unsafe_allow_html=True)
 
-        # ===== أيقونة 2 =====
-        c1, c2, c3 = st.columns(3)
-        with c2:
-            if st.button("🗂️"):
-                st.session_state.page = "categories"
-                st.rerun()
-            st.markdown('<div class="label">المجموعات</div>', unsafe_allow_html=True)
-
-        # ===== أيقونة 3 =====
-        c1, c2, c3 = st.columns(3)
-        with c2:
-            if st.button("👥"):
-                st.session_state.page = "suppliers"
-                st.rerun()
-            st.markdown('<div class="label">الموردين</div>', unsafe_allow_html=True)
+        # ===== كل الأيقونات =====
+        icon("ملفي الشخصي", "👤", "profile")
+        icon("الضبط", "⚙️", "settings")
+        icon("الصيدليات", "🏥", "pharmacy")
+        icon("الأصناف", "📦", "products")
+        icon("الموردين", "👥", "suppliers")
+        icon("المستودعات", "🏭", "warehouses")
+        icon("الصندوق", "💰", "cash")
+        icon("السندات", "🧾", "receipts")
+        icon("المجموعات", "🗂️", "categories")
 
 # ===== PAGES =====
 else:
