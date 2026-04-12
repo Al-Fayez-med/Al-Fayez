@@ -1,152 +1,100 @@
 import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, firestore
-import json
 
 st.set_page_config(page_title="نظام إدارة المستودعات", page_icon="💊", layout="wide")
-
-# ================= Firebase =================
-@st.cache_resource
-def init_firebase():
-    if not firebase_admin._apps:
-        key_dict = json.loads(st.secrets["firebase_key"])
-        cred = credentials.Certificate(key_dict)
-        firebase_admin.initialize_app(cred)
-    return firestore.client()
-
-db = init_firebase()
 
 # ================= Navigation =================
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
-# ================= Home (الشاشة الزرقا) =================
+# ================= Style =================
+st.markdown("""
+<style>
+body {
+    direction: rtl;
+}
+.block-container {
+    padding: 0;
+}
+.blue-bg {
+    background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
+    height: 100vh;
+    padding: 20px;
+}
+.card {
+    text-align: center;
+    padding: 20px;
+}
+.stButton>button {
+    width: 110px;
+    height: 110px;
+    border-radius: 25px;
+    border: 2px solid rgba(255,255,255,0.6);
+    background: transparent;
+    color: white;
+    font-size: 14px;
+}
+.stButton>button:active {
+    transform: scale(1.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ================= Home =================
 if st.session_state.page == "home":
 
-    st.components.v1.html("""
-    <!DOCTYPE html>
-    <html lang="ar">
-    <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      direction: rtl;
-      background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
-      color: white;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      height: 100vh;
-      padding: 15px;
-      gap: 15px;
-    }
-    .item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .icon-box {
-      width: 110px;
-      height: 110px;
-      border: 2px solid rgba(255,255,255,0.6);
-      border-radius: 25px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.15s ease-in-out, border-color 0.15s;
-    }
-    .icon-box:active {
-      transform: scale(1.1);
-      border-color: white;
-    }
-    .icon-box svg {
-      width: 55px;
-      height: 55px;
-      stroke: rgba(255,255,255,0.75);
-    }
-    .label {
-      margin-top: 10px;
-      font-size: 15px;
-    }
-    </style>
-    </head>
+    st.markdown('<div class="blue-bg">', unsafe_allow_html=True)
 
-    <body>
+    col1, col2 = st.columns(2)
 
-    <div class="container">
+    with col1:
+        if st.button("👤\nملفي الشخصي"):
+            st.session_state.page = "profile"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('profile','*')">
-        <div class="icon-box"><i data-lucide="user"></i></div>
-        <div class="label">ملفي الشخصي</div>
-      </div>
+        if st.button("🏥\nالصيدليات"):
+            st.session_state.page = "pharmacy"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('settings','*')">
-        <div class="icon-box"><i data-lucide="settings"></i></div>
-        <div class="label">الضبط</div>
-      </div>
+        if st.button("👥\nالموردين"):
+            st.session_state.page = "suppliers"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('pharmacy','*')">
-        <div class="icon-box"><i data-lucide="cross"></i></div>
-        <div class="label">الصيدليات</div>
-      </div>
+        if st.button("💰\nالصندوق"):
+            st.session_state.page = "cash"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('products','*')">
-        <div class="icon-box"><i data-lucide="box"></i></div>
-        <div class="label">الأصناف</div>
-      </div>
+    with col2:
+        if st.button("⚙️\nالضبط"):
+            st.session_state.page = "settings"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('suppliers','*')">
-        <div class="icon-box"><i data-lucide="users"></i></div>
-        <div class="label">الموردين</div>
-      </div>
+        if st.button("📦\nالأصناف"):
+            st.session_state.page = "products"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('warehouses','*')">
-        <div class="icon-box"><i data-lucide="warehouse"></i></div>
-        <div class="label">المستودعات</div>
-      </div>
+        if st.button("🏭\nالمستودعات"):
+            st.session_state.page = "warehouses"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('cash','*')">
-        <div class="icon-box"><i data-lucide="banknote"></i></div>
-        <div class="label">الصندوق</div>
-      </div>
+        if st.button("🧾\nالسندات"):
+            st.session_state.page = "receipts"
+            st.rerun()
 
-      <div class="item" onclick="parent.postMessage('receipts','*')">
-        <div class="icon-box"><i data-lucide="receipt"></i></div>
-        <div class="label">السندات</div>
-      </div>
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    </div>
-
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>lucide.createIcons();</script>
-
-    </body>
-    </html>
-    """, height=800)
-
-    # استقبال الضغطات
-    page = st.experimental_get_query_params().get("page")
-
-# ================= صفحات فاضية =================
+# ================= Pages =================
 else:
+
+    st.markdown("""
+    <div style="background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
+    height:100vh; padding:20px; color:white;">
+    """, unsafe_allow_html=True)
 
     if st.button("⬅️ رجوع"):
         st.session_state.page = "home"
         st.rerun()
 
-    st.markdown("""
-    <style>
-    body {
-      background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
-      color:white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    st.title("صفحة فارغة")
+    st.write("🚧 قيد التطوير")
 
-    st.title("صفحة جديدة")
-    st.info("🚧 صفحة قيد التطوير")
+    st.markdown("</div>", unsafe_allow_html=True)
