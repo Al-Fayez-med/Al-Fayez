@@ -144,7 +144,7 @@ def categories_section():
     # ===== CSS =====
     st.markdown("""
     <style>
-    /* تنسيق جميع الأزرار بشكل عام (ارتفاع 30 بكسل) */
+    /* تنسيق جميع الأزرار بشكل عام */
     div[data-testid="stButton"] button {
         height: 30px !important;
         border-radius: 8px !important;
@@ -171,19 +171,35 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق أزرار الإجراءات (أصغر حجماً ولون أغمق) */
-    button[key^="edit_btn_"], button[key^="del_btn_"], button[key^="view_btn_"] {
-        width: 40px !important;
+    /* تنسيق أزرار الإجراءات (أزرق غامق) */
+    div[data-testid="stButton"] button:has(span:contains("✏️ تعديل")) {
+        width: 80px !important;
         height: 30px !important;
         border-radius: 8px !important;
-        font-size: 16px !important;
+        font-size: 12px !important;
         padding: 0 !important;
-        background-color: #1e40af !important;
+        background-color: #1e3a8a !important;
         color: white !important;
     }
     
-    button[key^="edit_btn_"]:hover, button[key^="del_btn_"]:hover, button[key^="view_btn_"]:hover {
+    div[data-testid="stButton"] button:has(span:contains("🗑️ حذف")) {
+        width: 70px !important;
+        height: 30px !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        padding: 0 !important;
         background-color: #1e3a8a !important;
+        color: white !important;
+    }
+    
+    div[data-testid="stButton"] button:has(span:contains("👁️ استعراض")) {
+        width: 80px !important;
+        height: 30px !important;
+        border-radius: 8px !important;
+        font-size: 12px !important;
+        padding: 0 !important;
+        background-color: #1e3a8a !important;
+        color: white !important;
     }
     
     /* تنسيق حقل الكود غير القابل للتعديل */
@@ -198,27 +214,6 @@ def categories_section():
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-    
-    /* تنسيق صف الإجراءات */
-    .actions-row {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .code-item {
-        flex: 2;
-        min-width: 100px;
-    }
-    
-    .action-item {
-        flex: 1;
-        min-width: 70px;
-        text-align: center;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -309,7 +304,7 @@ def categories_section():
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            # ===== صف واحد يحتوي على الكود والأزرار (مع المسميات) =====
+            # ===== صف واحد يحتوي على الكود والأزرار =====
             col_code, col_edit, col_del, col_view = st.columns([2, 1, 1, 1])
             
             with col_code:
