@@ -5,31 +5,10 @@ st.set_page_config(layout="wide")
 # ===== STYLE =====
 st.markdown("""
 <style>
-
-/* حذف الهوامش */
-.block-container {
-    padding: 0 !important;
-}
-
-/* خلفية */
 [data-testid="stAppViewContainer"] {
     background: radial-gradient(circle at center, #3b82f6 0%, #1e3a8a 70%);
 }
 
-/* هذا أهم شي 👇 */
-.main {
-    display: flex;
-    justify-content: center;   /* أفقي */
-    align-items: center;       /* عمودي */
-    height: 100vh;             /* طول الشاشة كامل */
-}
-
-/* الصندوق */
-.center-box {
-    width: 300px;
-}
-
-/* الأزرار */
 .stButton > button {
     width: 100%;
     height: 80px;
@@ -40,7 +19,6 @@ st.markdown("""
     color: white;
     font-size: 18px;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -51,45 +29,48 @@ if "page" not in st.session_state:
 # ===== HOME =====
 if st.session_state.page == "home":
 
-    st.markdown('<div class="center-box">', unsafe_allow_html=True)
+    # 👇 هذا هو السر الحقيقي
+    left, center, right = st.columns([1,2,1])
 
-    if st.button("👤 ملفي الشخصي"):
-        st.session_state.page = "profile"
-        st.rerun()
+    with center:
 
-    if st.button("⚙️ الضبط"):
-        st.session_state.page = "settings"
-        st.rerun()
+        st.title("📱 القائمة الرئيسية")
 
-    if st.button("🏥 الصيدليات"):
-        st.session_state.page = "pharmacy"
-        st.rerun()
+        if st.button("👤 ملفي الشخصي"):
+            st.session_state.page = "profile"
+            st.rerun()
 
-    if st.button("📦 الأصناف"):
-        st.session_state.page = "products"
-        st.rerun()
+        if st.button("⚙️ الضبط"):
+            st.session_state.page = "settings"
+            st.rerun()
 
-    if st.button("👥 الموردين"):
-        st.session_state.page = "suppliers"
-        st.rerun()
+        if st.button("🏥 الصيدليات"):
+            st.session_state.page = "pharmacy"
+            st.rerun()
 
-    if st.button("🏭 المستودعات"):
-        st.session_state.page = "warehouses"
-        st.rerun()
+        if st.button("📦 الأصناف"):
+            st.session_state.page = "products"
+            st.rerun()
 
-    if st.button("💰 الصندوق"):
-        st.session_state.page = "cash"
-        st.rerun()
+        if st.button("👥 الموردين"):
+            st.session_state.page = "suppliers"
+            st.rerun()
 
-    if st.button("🧾 السندات"):
-        st.session_state.page = "receipts"
-        st.rerun()
+        if st.button("🏭 المستودعات"):
+            st.session_state.page = "warehouses"
+            st.rerun()
 
-    if st.button("🗂️ المجموعات"):
-        st.session_state.page = "categories"
-        st.rerun()
+        if st.button("💰 الصندوق"):
+            st.session_state.page = "cash"
+            st.rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("🧾 السندات"):
+            st.session_state.page = "receipts"
+            st.rerun()
+
+        if st.button("🗂️ المجموعات"):
+            st.session_state.page = "categories"
+            st.rerun()
 
 # ===== PAGES =====
 else:
