@@ -165,12 +165,12 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق زر المجموعة (بدون أيقونة) */
+    /* تنسيق زر المجموعة (ارتفاع 30 بكسل) */
     button[key^="group_"] {
-        height: 60px !important;
-        border-radius: 12px !important;
-        font-size: 18px !important;
-        padding: 0 20px !important;
+        height: 30px !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+        padding: 0 15px !important;
         background-color: #3b82f6 !important;
         color: white !important;
         white-space: nowrap !important;
@@ -195,6 +195,10 @@ def categories_section():
         color: #94a3b8;
         font-size: 14px;
         text-align: center;
+        height: 30px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* تنسيق صف الإجراءات */
@@ -295,7 +299,7 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة (بدون أيقونة) =====
+        # ===== زر المجموعة (ارتفاع 30 بكسل) =====
         if st.button(f"{c['name']}", key=f"group_{c['id']}"):
             if st.session_state.open == c["id"]:
                 st.session_state.open = None
