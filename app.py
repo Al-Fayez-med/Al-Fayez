@@ -53,9 +53,11 @@ body {
 }
 
 .icon-box svg {
-  width:42px;
-  height:42px;
-  stroke:rgba(255,255,255,0.75);
+  width:40px;
+  height:40px;
+  stroke:rgba(255,255,255,0.8);
+  fill:none;
+  stroke-width:2;
 }
 
 .label {
@@ -69,62 +71,70 @@ body {
 
 <div class="container">
 
-  <!-- الصف الأول -->
   <div class="item">
-    <div class="icon-box"><i data-lucide="user"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c2-4 14-4 16 0"/></svg>
+    </div>
     <div class="label">ملفي الشخصي</div>
   </div>
 
   <div class="item">
-    <div class="icon-box"><i data-lucide="settings"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1 1 0 0 0 .2 1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1-.2 1 1 0 0 0-.6.9V21a2 2 0 1 1-4 0v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1 .2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1 1 1 0 0 0-.9-.6H3a2 2 0 1 1 0-4h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1 .2 1 1 0 0 0 .6-.9V3a2 2 0 1 1 4 0v.1a1 1 0 0 0 .6.9 1 1 0 0 0 1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1 1 1 0 0 0 .9.6H21a2 2 0 1 1 0 4h-.1a1 1 0 0 0-.9.6z"/></svg>
+    </div>
     <div class="label">الضبط</div>
   </div>
 
-  <!-- الصف الثاني -->
   <div class="item">
-    <div class="icon-box"><i data-lucide="cross"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
     <div class="label">الصيدليات</div>
   </div>
 
   <div class="item">
-    <div class="icon-box"><i data-lucide="users"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5"/><circle cx="9" cy="7" r="4"/></svg>
+    </div>
     <div class="label">الموردين</div>
   </div>
 
-  <!-- الصف الثالث -->
   <div class="item">
-    <div class="icon-box"><i data-lucide="box"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13"/><path d="M3 7l9-4 9 4"/></svg>
+    </div>
     <div class="label">الأصناف</div>
   </div>
 
   <div class="item">
-    <div class="icon-box"><i data-lucide="layers"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </div>
     <div class="label">المجموعات</div>
   </div>
 
-  <!-- الصف الرابع -->
   <div class="item">
-    <div class="icon-box"><i data-lucide="warehouse"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><path d="M3 21V7l9-4 9 4v14"/></svg>
+    </div>
     <div class="label">المستودعات</div>
   </div>
 
   <div class="item">
-    <div class="icon-box"><i data-lucide="banknote"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12"/><circle cx="12" cy="12" r="2"/></svg>
+    </div>
     <div class="label">الصندوق</div>
   </div>
 
-  <!-- الصف الأخير (بالنص) -->
   <div class="item full">
-    <div class="icon-box"><i data-lucide="receipt"></i></div>
+    <div class="icon-box">
+      <svg viewBox="0 0 24 24"><path d="M6 2h12v20H6z"/><path d="M9 6h6"/></svg>
+    </div>
     <div class="label">السندات</div>
   </div>
 
 </div>
-
-<script src="https://unpkg.com/lucide@latest"></script>
-<script>
-lucide.createIcons();
-</script>
 
 </body>
 </html>
