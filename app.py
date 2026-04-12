@@ -183,13 +183,6 @@ def categories_section():
         padding: 0 !important;
     }
 
-    .action-label {
-        font-size: 12px;
-        opacity: 0.5;
-        margin-top: 5px;
-        text-align: center;
-    }
-    
     /* تنسيق حقل الكود غير القابل للتعديل */
     .code-display {
         background-color: #1e3a8a;
@@ -314,7 +307,7 @@ def categories_section():
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
 
-            # ===== صف واحد يحتوي على الكود والأزرار =====
+            # ===== صف واحد يحتوي على الكود والأزرار (بدون مسميات) =====
             st.markdown(f"""
             <div class="actions-row">
                 <div class="code-item">
@@ -322,15 +315,12 @@ def categories_section():
                 </div>
                 <div class="action-item">
                     <div class="action-btn" id="edit_btn_{c['id']}"></div>
-                    <div class="action-label">تعديل</div>
                 </div>
                 <div class="action-item">
                     <div class="action-btn" id="del_btn_{c['id']}"></div>
-                    <div class="action-label">حذف</div>
                 </div>
                 <div class="action-item">
                     <div class="action-btn" id="view_btn_{c['id']}"></div>
-                    <div class="action-label">استعراض</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
