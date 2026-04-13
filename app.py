@@ -162,16 +162,18 @@ def categories_section():
     
     /* تنسيق زر المجموعة */
     .group-btn button {
-        width: 100% !important;
         background-color: #3b82f6 !important;
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 5px 15px !important;
-        text-align: right !important;
+        padding: 0 15px !important;
+        text-align: center !important;
         font-size: 14px !important;
         cursor: pointer !important;
         height: 30px !important;
+        width: auto !important;
+        min-width: 25% !important;
+        white-space: nowrap !important;
     }
     
     .group-btn button:hover {
@@ -308,7 +310,7 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة (مع div.group-btn) =====
+        # ===== زر المجموعة =====
         with st.container():
             st.markdown('<div class="group-btn">', unsafe_allow_html=True)
             if st.button(f"{c['name']}", key=f"group_{c['id']}"):
