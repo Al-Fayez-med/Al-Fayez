@@ -171,35 +171,19 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق أزرار الإجراءات (أزرق غامق) */
-    div[data-testid="stButton"] button:has(span:contains("✏️ تعديل")) {
-        width: 80px !important;
-        height: 30px !important;
-        border-radius: 8px !important;
-        font-size: 12px !important;
-        padding: 0 !important;
+    /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) */
+    button[key^="edit_btn_"], button[key^="del_btn_"], button[key^="view_btn_"] {
         background-color: #1e3a8a !important;
         color: white !important;
+        width: auto !important;
+        min-width: 70px !important;
+        height: 30px !important;
+        font-size: 12px !important;
+        padding: 0 10px !important;
     }
     
-    div[data-testid="stButton"] button:has(span:contains("🗑️ حذف")) {
-        width: 70px !important;
-        height: 30px !important;
-        border-radius: 8px !important;
-        font-size: 12px !important;
-        padding: 0 !important;
-        background-color: #1e3a8a !important;
-        color: white !important;
-    }
-    
-    div[data-testid="stButton"] button:has(span:contains("👁️ استعراض")) {
-        width: 80px !important;
-        height: 30px !important;
-        border-radius: 8px !important;
-        font-size: 12px !important;
-        padding: 0 !important;
-        background-color: #1e3a8a !important;
-        color: white !important;
+    button[key^="edit_btn_"]:hover, button[key^="del_btn_"]:hover, button[key^="view_btn_"]:hover {
+        background-color: #1e40af !important;
     }
     
     /* تنسيق حقل الكود غير القابل للتعديل */
@@ -293,7 +277,7 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة =====
+        # ===== زر المجموعة (لونه يبقى أزرق فاتح) =====
         if st.button(f"{c['name']}", key=f"group_{c['id']}"):
             if st.session_state.open == c["id"]:
                 st.session_state.open = None
