@@ -105,7 +105,7 @@ def categories_section():
         st.session_state.delete_id = None
 
     # =========================================
-    # ➕ إضافة مجموعة (زر صغير 40x40)
+    # ➕ إضافة مجموعة (زر صغير 60x60)
     # =========================================
     col_add1, col_add2 = st.columns([1, 10])
     with col_add1:
