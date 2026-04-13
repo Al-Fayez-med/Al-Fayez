@@ -145,11 +145,6 @@ def categories_section():
     st.markdown("""
     <style>
     /* تنسيق زر إضافة مجموعة */
-    div[data-testid="column"]:has(button[key="open_add_category"]) {
-        display: flex;
-        justify-content: flex-start;
-    }
-    
     button[key="open_add_category"] {
         width: 60px !important;
         height: 60px !important;
@@ -165,64 +160,76 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق أزرار المجموعات (المعدل) */
-    .group-btn button {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 0 15px !important;
-        text-align: center !important;
-        font-size: 14px !important;
-        cursor: pointer !important;
-        height: 30px !important;
-        width: auto !important;
-        min-width: 25% !important;
-        white-space: nowrap !important;
+    /* تنسيق زر المجموعة */
+    .group-btn {
+        width: 100%;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 5px 15px;
+        text-align: right;
+        font-size: 14px;
+        cursor: pointer;
+        margin-bottom: 5px;
+        height: 30px;
     }
     
-    .group-btn button:hover {
-        background-color: #2563eb !important;
+    .group-btn:hover {
+        background-color: #2563eb;
     }
-
-    /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) - لم نغيرها */
-    .action-btn button {
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 12px !important;
-        font-size: 20px !important;
-        padding: 0 !important;
-    }
-
-    /* تنسيق حقل الكود غير القابل للتعديل */
+    
+    /* تنسيق حقل الكود */
     .code-display {
         background-color: #1e3a8a;
-        padding: 8px 12px;
+        padding: 6px 12px;
         border-radius: 8px;
         color: #94a3b8;
         font-size: 14px;
         text-align: center;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
-    /* تنسيق صف الإجراءات */
+    /* تنسيق أزرار الإجراءات */
+    .action-btn {
+        background-color: #1e40af;
+        color: white;
+        border: 1px solid #3b82f6;
+        border-radius: 8px;
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        width: 100%;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .action-btn:hover {
+        background-color: #2563eb;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    /* تنسيق الصفوف */
     .actions-row {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 10px;
         margin-top: 10px;
         margin-bottom: 10px;
-        flex-wrap: wrap;
     }
     
     .code-item {
         flex: 2;
-        min-width: 100px;
     }
     
     .action-item {
         flex: 1;
-        min-width: 70px;
-        text-align: center;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -253,7 +260,7 @@ def categories_section():
         st.session_state.delete_id = None
 
     # =========================================
-    # ➕ إضافة مجموعة (زر صغير 60x60)
+    # ➕ إضافة مجموعة
     # =========================================
     col_add1, col_add2 = st.columns([1, 10])
     with col_add1:
@@ -302,11 +309,11 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة (بدون أيقونة) =====
+        # ===== زر المجموعة =====
         with st.container():
             st.markdown('<div class="group-btn">', unsafe_allow_html=True)
 
-            if st.button(f"{c['name']}", key=f"group_{c['id']}"):
+            if st.button(f"📁 {c['name']}", key=f"group_{c['id']}"):
                 if st.session_state.open == c["id"]:
                     st.session_state.open = None
                 else:
@@ -354,64 +361,6 @@ def categories_section():
             # عرض عدد الأصناف
             count = sum(1 for p in products if p.get("category_code") == c["code"])
             st.caption(f"📊 عدد الأصناف: {count}")
-
-            # =========================================
-            # ✏️ تعديل inline
-            # =========================================
-            if st.session_state.edit_id == c["id"]:
-
-                st.markdown("---")
-                st.markdown("#### ✏️ تعديل المجموعة")
-                
-                col_edit_name, col_edit_spacer = st.columns([2, 1])
-                
-                with col_edit_name:
-                    new_name = st.text_input("اسم جديد", value=c["name"], key=f"edit_input_{c['id']}")
-                
-                st.markdown(f'<div class="code-display">الكود: {c["code"]}</div>', unsafe_allow_html=True)
-
-                colA, colB = st.columns(2)
-
-                with colA:
-                    if st.button("✔️ حفظ", key=f"save_{c['id']}", use_container_width=True):
-                        db.collection("categories").document(c["id"]).update({
-                            "name": new_name
-                        })
-                        st.session_state.edit_id = None
-                        st.cache_data.clear()
-                        st.rerun()
-
-                with colB:
-                    if st.button("❌ إلغاء", key=f"cancel_edit_{c['id']}", use_container_width=True):
-                        st.session_state.edit_id = None
-                        st.rerun()
-
-            # =========================================
-            # 🗑️ حذف inline
-            # =========================================
-            if st.session_state.delete_id == c["id"]:
-
-                st.markdown("---")
-                st.warning(f"⚠️ هل أنت متأكد من حذف مجموعة '{c['name']}'؟")
-
-                has_products = any(p.get("category_code") == c["code"] for p in products)
-
-                if has_products:
-                    st.error("❌ لا يمكن حذف مجموعة تحتوي على أصناف. قم بحذف الأصناف أولاً.")
-
-                colA, colB = st.columns(2)
-
-                with colA:
-                    if st.button("✔️ نعم، احذف", key=f"confirm_del_{c['id']}", use_container_width=True, disabled=has_products):
-                        db.collection("categories").document(c["id"]).delete()
-                        st.session_state.delete_id = None
-                        st.cache_data.clear()
-                        st.rerun()
-
-                with colB:
-                    if st.button("❌ إلغاء", key=f"cancel_del_{c['id']}", use_container_width=True):
-                        st.session_state.delete_id = None
-                        st.rerun()
 
             st.markdown("---")
 # =========================================
