@@ -171,7 +171,7 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) */
+    /* تنسيق أزرار الإجراءات (تعديل، حذف، استعراض) باستخدام key */
     button[key^="edit_btn_"], button[key^="del_btn_"], button[key^="view_btn_"] {
         background-color: #1e3a8a !important;
         color: white !important;
@@ -277,7 +277,7 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة (لونه يبقى أزرق فاتح) =====
+        # ===== زر المجموعة =====
         if st.button(f"{c['name']}", key=f"group_{c['id']}"):
             if st.session_state.open == c["id"]:
                 st.session_state.open = None
