@@ -160,7 +160,7 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق زر المجموعة (أزرق فاتح) */
+    /* تنسيق زر المجموعة */
     .group-btn {
         width: 100%;
         background-color: #3b82f6;
@@ -195,9 +195,9 @@ def categories_section():
     
     /* تنسيق أزرار الإجراءات */
     .action-btn {
-        background-color: #1e3a8a;
+        background-color: #1e40af;
         color: white;
-        border: none;
+        border: 1px solid #3b82f6;
         border-radius: 8px;
         padding: 5px 10px;
         font-size: 12px;
@@ -207,10 +207,12 @@ def categories_section():
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     
     .action-btn:hover {
-        background-color: #1e40af;
+        background-color: #2563eb;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     
     /* تنسيق الصفوف */
@@ -332,7 +334,7 @@ def categories_section():
                     <button class="action-btn" onclick="alert('حذف المجموعة {c["name"]}')">🗑️ حذف</button>
                 </div>
                 <div class="action-item">
-                    <button class="action-btn" onclick="alert('استعراض المجموعة {c["name"]}')">👁️ استعراض</button>
+                    <button class="action-btn" onclick="alert('عرض المجموعة {c["name"]}')">👁️ عرض</button>
                 </div>
             </div>
             """, unsafe_allow_html=True)
