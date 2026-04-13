@@ -161,22 +161,21 @@ def categories_section():
     }
     
     /* تنسيق زر المجموعة */
-    .group-btn {
-        width: 100%;
-        background-color: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 5px 15px;
-        text-align: right;
-        font-size: 14px;
-        cursor: pointer;
-        margin-bottom: 5px;
-        height: 30px;
+    .group-btn button {
+        width: 100% !important;
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 5px 15px !important;
+        text-align: right !important;
+        font-size: 14px !important;
+        cursor: pointer !important;
+        height: 30px !important;
     }
     
-    .group-btn:hover {
-        background-color: #2563eb;
+    .group-btn button:hover {
+        background-color: #2563eb !important;
     }
     
     /* تنسيق حقل الكود */
@@ -309,14 +308,16 @@ def categories_section():
     # =========================================
     for c in categories:
 
-        # ===== زر المجموعة (HTML) =====
-        group_key = f"group_{c['id']}"
-        if st.button(f"{c['name']}", key=group_key):
-            if st.session_state.open == c["id"]:
-                st.session_state.open = None
-            else:
-                st.session_state.open = c["id"]
-            st.rerun()
+        # ===== زر المجموعة (مع div.group-btn) =====
+        with st.container():
+            st.markdown('<div class="group-btn">', unsafe_allow_html=True)
+            if st.button(f"{c['name']}", key=f"group_{c['id']}"):
+                if st.session_state.open == c["id"]:
+                    st.session_state.open = None
+                else:
+                    st.session_state.open = c["id"]
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # ===== التفاصيل =====
         if st.session_state.open == c["id"]:
