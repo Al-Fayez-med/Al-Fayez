@@ -160,7 +160,7 @@ def categories_section():
         background-color: #2563eb !important;
     }
     
-    /* تنسيق زر المجموعة */
+    /* تنسيق زر المجموعة (أزرق فاتح) */
     .group-btn {
         width: 100%;
         background-color: #3b82f6;
@@ -204,6 +204,9 @@ def categories_section():
         cursor: pointer;
         width: 100%;
         height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .action-btn:hover {
