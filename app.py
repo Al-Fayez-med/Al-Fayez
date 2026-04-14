@@ -35,6 +35,8 @@ if "delete_id" not in st.session_state:
     st.session_state.delete_id = None
 if "view_id" not in st.session_state:
     st.session_state.view_id = None
+if "open_category" not in st.session_state:
+    st.session_state.open_category = None
 
 # ==================== CSS ====================
 st.markdown("""
@@ -46,52 +48,61 @@ st.markdown("""
     border-radius: 1rem;
     margin-bottom: 2rem;
 }
-.category-card {
+/* زر المجموعة الرئيسي */
+.category-btn {
+    width: 100%;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 15px;
+    text-align: right;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: white;
-    border-radius: 12px;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.category-info {
-    flex: 2;
-    text-align: right;
+.category-btn:hover {
+    background-color: #2563eb;
 }
-.category-name {
-    font-size: 16px;
-    font-weight: bold;
-    color: #1f2937;
-}
-.category-code {
+.category-code-small {
     font-size: 10px;
-    color: #6b7280;
+    color: #bfdbfe;
 }
-.actions-group {
+/* القائمة المنسدلة */
+.dropdown-menu {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    border-right: 4px solid #3b82f6;
+}
+.action-buttons {
     display: flex;
-    gap: 8px;
-    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 8px;
 }
-.icon-btn {
+.action-btn {
     background-color: #1e3a8a;
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 16px;
+    padding: 6px 16px;
+    font-size: 13px;
     cursor: pointer;
-    min-width: 40px;
-    text-align: center;
+    min-width: 70px;
 }
-.icon-btn:hover {
+.action-btn:hover {
     background-color: #2563eb;
 }
-.delete-icon {
+.delete-btn {
     background-color: #dc2626;
 }
-.delete-icon:hover {
+.delete-btn:hover {
     background-color: #b91c1c;
 }
 </style>
@@ -131,71 +142,113 @@ if st.session_state.show_modal:
 # عرض المجموعات
 categories = load_categories()
 for cat in categories:
-    with st.container():
-        col_name, col_actions = st.columns([3, 1])
-        
-        with col_name:
-            st.markdown(f"""
-            <div class="category-info">
-                <div class="category-name">{cat['name']}</div>
-                <div class="category-code">الكود: {cat['code']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col_actions:
-            btn1, btn2, btn3 = st.columns(3)
-            with btn1:
-                if st.button("✏️", key=f"edit_{cat['id']}", help="تعديل"):
-                    st.session_state.edit_id = cat['id']
-                    st.rerun()
-            with btn2:
-                if st.button("🗑️", key=f"del_{cat['id']}", help="حذف"):
-                    st.session_state.delete_id = cat['id']
-                    st.rerun()
-            with btn3:
-                if st.button("👁️", key=f"view_{cat['id']}", help="عرض"):
-                    st.session_state.view_id = cat['id']
-                    st.rerun()
+    cat_id = cat['id']
     
-    # تعديل
-    if st.session_state.edit_id == cat['id']:
-        new_name = st.text_input("اسم جديد", value=cat['name'], key=f"edit_input_{cat['id']}")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("💾 حفظ", key=f"save_edit_{cat['id']}"):
-                db.collection("categories").document(cat['id']).update({"name": new_name})
-                st.session_state.edit_id = None
-                st.rerun()
-        with col2:
-            if st.button("❌ إلغاء", key=f"cancel_edit_{cat['id']}"):
-                st.session_state.edit_id = None
-                st.rerun()
+    # زر المجموعة الرئيسي
+    if st.button(f"📁 {cat['name']}   <span class='category-code-small'>({cat['code']})</span>", key=f"cat_{cat_id}", use_container_width=True):
+        if st.session_state.open_category == cat_id:
+            st.session_state.open_category = None
+        else:
+            st.session_state.open_category = cat_id
+        st.rerun()
     
-    # حذف
-    if st.session_state.delete_id == cat['id']:
-        st.warning(f"⚠️ هل تريد حذف '{cat['name']}'؟")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("✅ نعم", key=f"confirm_del_{cat['id']}"):
-                db.collection("categories").document(cat['id']).delete()
-                st.session_state.delete_id = None
-                st.rerun()
-        with col2:
-            if st.button("❌ لا", key=f"cancel_del_{cat['id']}"):
-                st.session_state.delete_id = None
-                st.rerun()
-    
-    # عرض
-    if st.session_state.view_id == cat['id']:
+    # القائمة المنسدلة (تظهر إذا كانت هذه المجموعة مفتوحة)
+    if st.session_state.open_category == cat_id:
         st.markdown(f"""
-        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 12px; margin-top: 8px;">
-            <p><strong>📋 تفاصيل المجموعة</strong></p>
-            <p>الاسم: {cat['name']}</p>
-            <p>الكود: {cat['code']}</p>
+        <div class="dropdown-menu">
+            <div style="text-align: center; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: #475569;">الكود: {cat['code']}</span>
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" id="edit_{cat_id}">✏️ تعديل</button>
+                <button class="action-btn delete-btn" id="delete_{cat_id}">🗑️ حذف</button>
+                <button class="action-btn" id="view_{cat_id}">👁️ عرض</button>
+            </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("🔙 إغلاق", key=f"close_view_{cat['id']}"):
-            st.session_state.view_id = None
+        
+        # الأزرار المخفية (لربط HTML بوظائف Streamlit)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.button("edit", key=f"real_edit_{cat_id}", label_visibility="collapsed")
+        with col2:
+            st.button("delete", key=f"real_del_{cat_id}", label_visibility="collapsed")
+        with col3:
+            st.button("view", key=f"real_view_{cat_id}", label_visibility="collapsed")
+        
+        # ربط الأزرار
+        st.markdown(f"""
+        <script>
+            const editBtn = document.getElementById('edit_{cat_id}');
+            if (editBtn) editBtn.onclick = () => {{
+                const realBtn = window.parent.document.querySelector('button[data-testid="baseButton-secondary"][key="real_edit_{cat_id}"]');
+                if (realBtn) realBtn.click();
+            }};
+            const deleteBtn = document.getElementById('delete_{cat_id}');
+            if (deleteBtn) deleteBtn.onclick = () => {{
+                const realBtn = window.parent.document.querySelector('button[data-testid="baseButton-secondary"][key="real_del_{cat_id}"]');
+                if (realBtn) realBtn.click();
+            }};
+            const viewBtn = document.getElementById('view_{cat_id}');
+            if (viewBtn) viewBtn.onclick = () => {{
+                const realBtn = window.parent.document.querySelector('button[data-testid="baseButton-secondary"][key="real_view_{cat_id}"]');
+                if (realBtn) realBtn.click();
+            }};
+        </script>
+        """, unsafe_allow_html=True)
+        
+        # معالجة الأزرار الفعلية
+        if st.session_state.get(f"real_edit_{cat_id}"):
+            st.session_state.edit_id = cat_id
             st.rerun()
+        if st.session_state.get(f"real_del_{cat_id}"):
+            st.session_state.delete_id = cat_id
+            st.rerun()
+        if st.session_state.get(f"real_view_{cat_id}"):
+            st.session_state.view_id = cat_id
+            st.rerun()
+        
+        # نوافذ التعديل والحذف والعرض
+        if st.session_state.edit_id == cat_id:
+            with st.container():
+                st.markdown('<div style="background-color: #f1f5f9; border-radius: 8px; padding: 12px; margin-top: 8px;">', unsafe_allow_html=True)
+                new_name = st.text_input("✏️ تعديل الاسم", value=cat['name'], key=f"edit_input_{cat_id}")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("💾 حفظ", key=f"save_edit_{cat_id}"):
+                        db.collection("categories").document(cat_id).update({"name": new_name})
+                        st.session_state.edit_id = None
+                        st.rerun()
+                with col2:
+                    if st.button("❌ إلغاء", key=f"cancel_edit_{cat_id}"):
+                        st.session_state.edit_id = None
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        if st.session_state.delete_id == cat_id:
+            with st.container():
+                st.markdown('<div style="background-color: #f1f5f9; border-radius: 8px; padding: 12px; margin-top: 8px;">', unsafe_allow_html=True)
+                st.warning(f"⚠️ هل تريد حذف '{cat['name']}'؟")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("✅ نعم", key=f"confirm_del_{cat_id}"):
+                        db.collection("categories").document(cat_id).delete()
+                        st.session_state.delete_id = None
+                        st.rerun()
+                with col2:
+                    if st.button("❌ لا", key=f"cancel_del_{cat_id}"):
+                        st.session_state.delete_id = None
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        if st.session_state.view_id == cat_id:
+            with st.container():
+                st.markdown('<div style="background-color: #f1f5f9; border-radius: 8px; padding: 12px; margin-top: 8px;">', unsafe_allow_html=True)
+                st.markdown(f"**📋 الاسم:** {cat['name']}")
+                st.markdown(f"**🔢 الكود:** {cat['code']}")
+                if st.button("🔙 إغلاق", key=f"close_view_{cat_id}"):
+                    st.session_state.view_id = None
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
     
     st.divider()
