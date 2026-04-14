@@ -38,70 +38,45 @@ if "view_id" not in st.session_state:
 if "open_category" not in st.session_state:
     st.session_state.open_category = None
 
-# ==================== CSS ====================
+# ==================== CSS لتقليل المسافات ====================
 st.markdown("""
 <style>
 .main-header {
     text-align: center;
-    padding: 2rem;
+    padding: 0.5rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 1rem;
-    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+/* تقليل المسافات بين العناصر */
+.block-container {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0rem !important;
+}
+.element-container {
+    margin-bottom: 0rem !important;
+}
+/* زر المجموعة بدون مسافات */
+.stButton button {
+    padding: 4px 8px !important;
+    margin: 0px !important;
+}
+/* إزالة المسافات بين الأقسام */
+hr {
+    margin: 4px 0px !important;
+}
+/* تقليل مسافات الحاوية */
+div[data-testid="stVerticalBlock"] > div {
+    padding: 0px 0px !important;
 }
 .category-row {
-    margin-bottom: 8px;
-}
-.category-header {
-    width: 100%;
-}
-.category-header button {
-    width: 100% !important;
-    background-color: #3b82f6 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 12px !important;
-    padding: 10px 15px !important;
-    text-align: right !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    display: flex !important;
-    justify-content: space-between !important;
-}
-.code-small {
-    font-size: 10px;
-    color: #bfdbfe;
-}
-.dropdown-box {
-    background-color: #f8fafc;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    border-right: 4px solid #3b82f6;
-}
-.action-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 8px;
-}
-.action-buttons button {
-    background-color: #1e3a8a !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 6px 16px !important;
-    font-size: 13px !important;
-    flex: 1 !important;
-}
-.action-buttons button:first-child {
-    background-color: #dc2626 !important;
+    margin-bottom: 2px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ==================== الواجهة ====================
-st.markdown('<div class="main-header"><h1 class="text-4xl font-bold text-white">🗂️ المجموعات</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header"><h1 class="text-2xl font-bold text-white">🗂️ المجموعات</h1></div>', unsafe_allow_html=True)
 
 # زر إضافة مجموعة
 col1, col2 = st.columns([1, 10])
@@ -136,9 +111,9 @@ categories = load_categories()
 for cat in categories:
     cat_id = cat['id']
     
-    # زر المجموعة الرئيسي
+    # صف واحد: اسم المجموعة + الكود في سطر واحد
     with st.container():
-        col1, col2 = st.columns([8, 1])
+        col1, col2, col3 = st.columns([6, 2, 1])
         with col1:
             if st.button(f"📁 {cat['name']}", key=f"cat_{cat_id}", use_container_width=True):
                 if st.session_state.open_category == cat_id:
@@ -147,13 +122,18 @@ for cat in categories:
                     st.session_state.open_category = cat_id
                 st.rerun()
         with col2:
-            st.caption(cat['code'])
+            st.markdown(f'<div style="font-size: 10px; color: #6b7280; padding-top: 8px;">{cat["code"]}</div>', unsafe_allow_html=True)
+        with col3:
+            if st.button("⋮", key=f"menu_{cat_id}", help="خيارات"):
+                if st.session_state.open_category == cat_id:
+                    st.session_state.open_category = None
+                else:
+                    st.session_state.open_category = cat_id
+                st.rerun()
     
-    # القائمة المنسدلة
+    # القائمة المنسدلة (ثلاثة أزرار في صف واحد)
     if st.session_state.open_category == cat_id:
         with st.container():
-            st.markdown('<div class="dropdown-box">', unsafe_allow_html=True)
-            
             col1, col2, col3 = st.columns(3)
             with col1:
                 if st.button("✏️ تعديل", key=f"edit_{cat_id}", use_container_width=True):
@@ -167,8 +147,6 @@ for cat in categories:
                 if st.button("👁️ عرض", key=f"view_{cat_id}", use_container_width=True):
                     st.session_state.view_id = cat_id
                     st.rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)
     
     # نافذة التعديل
     if st.session_state.edit_id == cat_id:
@@ -201,14 +179,11 @@ for cat in categories:
     # نافذة العرض
     if st.session_state.view_id == cat_id:
         st.markdown(f"""
-        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 12px; margin-top: 8px;">
-            <p><strong>📋 تفاصيل المجموعة</strong></p>
-            <p>الاسم: {cat['name']}</p>
-            <p>الكود: {cat['code']}</p>
+        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 8px; margin-top: 4px;">
+            <p style="margin: 0;"><strong>📋</strong> {cat['name']}</p>
+            <p style="margin: 0; font-size: 10px;">الكود: {cat['code']}</p>
         </div>
         """, unsafe_allow_html=True)
         if st.button("🔙 إغلاق", key=f"close_view_{cat_id}"):
             st.session_state.view_id = None
             st.rerun()
-    
-    st.divider()
