@@ -26,22 +26,15 @@ def generate_code():
     max_code = max(int(c["code"]) for c in cats)
     return str(max_code + 1).zfill(3)
 
-# ==================== معالجة الإجراءات ====================
-action = st.query_params.get("action", None)
-cat_id = st.query_params.get("id", None)
-
-if action == "edit" and cat_id:
-    st.session_state.edit_id = cat_id
-    # مسح parameters بعد القراءة
-    st.query_params.clear()
-
-if action == "delete" and cat_id:
-    st.session_state.delete_id = cat_id
-    st.query_params.clear()
-
-if action == "view" and cat_id:
-    st.session_state.view_cat = cat_id
-    st.query_params.clear()
+# ==================== تهيئة session_state ====================
+if "show_modal" not in st.session_state:
+    st.session_state.show_modal = False
+if "edit_id" not in st.session_state:
+    st.session_state.edit_id = None
+if "delete_id" not in st.session_state:
+    st.session_state.delete_id = None
+if "open_action" not in st.session_state:
+    st.session_state.open_action = None
 
 # ==================== CSS ====================
 st.markdown("""
@@ -56,8 +49,8 @@ st.markdown("""
 .category-card {
     background-color: white;
     border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     display: flex;
     justify-content: space-between;
@@ -66,7 +59,7 @@ st.markdown("""
 }
 .category-info {
     flex: 2;
-    min-width: 150px;
+    text-align: right;
 }
 .category-name {
     font-size: 16px;
@@ -80,7 +73,6 @@ st.markdown("""
 .actions-group {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
 }
 .action-btn {
     background-color: #1e3a8a;
@@ -90,10 +82,8 @@ st.markdown("""
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    min-width: 60px;
+    text-align: center;
 }
 .action-btn:hover {
     background-color: #2563eb;
@@ -109,16 +99,6 @@ st.markdown("""
 
 # ==================== الواجهة ====================
 st.markdown('<div class="main-header"><h1 class="text-4xl font-bold text-white">🗂️ المجموعات</h1></div>', unsafe_allow_html=True)
-
-# حالة النافذة المنبثقة
-if "show_modal" not in st.session_state:
-    st.session_state.show_modal = False
-
-if "edit_id" not in st.session_state:
-    st.session_state.edit_id = None
-
-if "delete_id" not in st.session_state:
-    st.session_state.delete_id = None
 
 # زر إضافة مجموعة
 col1, col2 = st.columns([1, 10])
@@ -151,65 +131,64 @@ if st.session_state.show_modal:
 # عرض المجموعات
 categories = load_categories()
 for cat in categories:
-    # بناء روابط الأزرار
-    edit_link = f"?action=edit&id={cat['id']}"
-    delete_link = f"?action=delete&id={cat['id']}"
-    view_link = f"?action=view&id={cat['id']}"
-    
-    st.markdown(f"""
-    <div class="category-card">
-        <div class="category-info">
-            <div class="category-name">{cat['name']}</div>
-            <div class="category-code">الكود: {cat['code']}</div>
-        </div>
-        <div class="actions-group">
-            <a href="{edit_link}" class="action-btn" target="_self">✏️ تعديل</a>
-            <a href="{delete_link}" class="action-btn delete-btn" target="_self">🗑️ حذف</a>
-            <a href="{view_link}" class="action-btn" target="_self">👁️ عرض</a>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ==================== معالجة التعديل ====================
-if st.session_state.edit_id:
-    cat_to_edit = next((c for c in categories if c["id"] == st.session_state.edit_id), None)
-    if cat_to_edit:
-        st.markdown("---")
-        st.markdown("### ✏️ تعديل المجموعة")
-        new_name = st.text_input("اسم جديد", value=cat_to_edit["name"], key="edit_input")
-        if st.button("💾 حفظ التعديل", key="save_edit"):
-            db.collection("categories").document(cat_to_edit["id"]).update({"name": new_name})
-            st.session_state.edit_id = None
-            st.rerun()
-        if st.button("❌ إلغاء", key="cancel_edit"):
-            st.session_state.edit_id = None
-            st.rerun()
-
-# ==================== معالجة الحذف ====================
-if st.session_state.delete_id:
-    cat_to_delete = next((c for c in categories if c["id"] == st.session_state.delete_id), None)
-    if cat_to_delete:
-        st.markdown("---")
-        st.warning(f"⚠️ هل تريد حذف '{cat_to_delete['name']}' نهائياً؟")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("✅ نعم، احذف", key="confirm_delete"):
-                db.collection("categories").document(cat_to_delete["id"]).delete()
-                st.session_state.delete_id = None
+    # عرض بطاقة المجموعة
+    with st.container():
+        col_info, col_buttons = st.columns([2, 1])
+        
+        with col_info:
+            st.markdown(f'<div class="category-info"><div class="category-name">{cat["name"]}</div><div class="category-code">الكود: {cat["code"]}</div></div>', unsafe_allow_html=True)
+        
+        with col_buttons:
+            btn_col1, btn_col2, btn_col3 = st.columns(3)
+            with btn_col1:
+                if st.button("✏️ تعديل", key=f"edit_btn_{cat['id']}", use_container_width=True):
+                    st.session_state.edit_id = cat['id']
+            with btn_col2:
+                if st.button("🗑️ حذف", key=f"del_btn_{cat['id']}", use_container_width=True):
+                    st.session_state.delete_id = cat['id']
+            with btn_col3:
+                if st.button("👁️ عرض", key=f"view_btn_{cat['id']}", use_container_width=True):
+                    st.session_state.open_action = f"view_{cat['id']}"
+        
+        # تعديل
+        if st.session_state.edit_id == cat['id']:
+            new_name = st.text_input("اسم جديد", value=cat['name'], key=f"edit_input_{cat['id']}")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("💾 حفظ", key=f"save_edit_{cat['id']}"):
+                    db.collection("categories").document(cat['id']).update({"name": new_name})
+                    st.session_state.edit_id = None
+                    st.rerun()
+            with col2:
+                if st.button("❌ إلغاء", key=f"cancel_edit_{cat['id']}"):
+                    st.session_state.edit_id = None
+                    st.rerun()
+        
+        # حذف
+        if st.session_state.delete_id == cat['id']:
+            st.warning(f"⚠️ هل تريد حذف '{cat['name']}'؟")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ نعم", key=f"confirm_del_{cat['id']}"):
+                    db.collection("categories").document(cat['id']).delete()
+                    st.session_state.delete_id = None
+                    st.rerun()
+            with col2:
+                if st.button("❌ لا", key=f"cancel_del_{cat['id']}"):
+                    st.session_state.delete_id = None
+                    st.rerun()
+        
+        # عرض التفاصيل
+        if st.session_state.open_action == f"view_{cat['id']}":
+            st.markdown(f"""
+            <div style="background-color: #f3f4f6; border-radius: 8px; padding: 12px; margin-top: 8px;">
+                <p><strong>📋 تفاصيل المجموعة</strong></p>
+                <p>الاسم: {cat['name']}</p>
+                <p>الكود: {cat['code']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("🔙 إغلاق", key=f"close_view_{cat['id']}"):
+                st.session_state.open_action = None
                 st.rerun()
-        with col2:
-            if st.button("❌ إلغاء", key="cancel_delete"):
-                st.session_state.delete_id = None
-                st.rerun()
-
-# ==================== معالجة العرض ====================
-if st.session_state.get("view_cat"):
-    cat_to_view = next((c for c in categories if c["id"] == st.session_state.view_cat), None)
-    if cat_to_view:
-        st.markdown("---")
-        st.markdown(f"### 👁️ عرض المجموعة: {cat_to_view['name']}")
-        st.write(f"**الاسم:** {cat_to_view['name']}")
-        st.write(f"**الكود:** {cat_to_view['code']}")
-        if st.button("🔙 رجوع"):
-            st.session_state.view_cat = None
-            st.rerun()
+        
+        st.divider()
