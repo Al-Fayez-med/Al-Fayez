@@ -36,6 +36,22 @@ if "delete_id" not in st.session_state:
 if "view_id" not in st.session_state:
     st.session_state.view_id = None
 
+# ==================== دوال الأزرار ====================
+def handle_edit(cat_id):
+    st.session_state.edit_id = cat_id
+    st.session_state.delete_id = None
+    st.session_state.view_id = None
+
+def handle_delete(cat_id):
+    st.session_state.delete_id = cat_id
+    st.session_state.edit_id = None
+    st.session_state.view_id = None
+
+def handle_view(cat_id):
+    st.session_state.view_id = cat_id
+    st.session_state.edit_id = None
+    st.session_state.delete_id = None
+
 # ==================== CSS ====================
 st.markdown("""
 <style>
@@ -55,6 +71,7 @@ st.markdown("""
     padding: 8px 12px;
     margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
 }
 .category-info {
     flex: 2;
@@ -72,7 +89,7 @@ st.markdown("""
 .actions-group {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-end;
 }
 .action-btn {
@@ -94,6 +111,19 @@ st.markdown("""
 }
 .delete-btn:hover {
     background-color: #b91c1c;
+}
+@media (max-width: 600px) {
+    .category-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .category-info {
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    .actions-group {
+        justify-content: center;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -132,31 +162,32 @@ if st.session_state.show_modal:
 # عرض المجموعات
 categories = load_categories()
 for cat in categories:
-    # عرض بطاقة المجموعة باستخدام HTML
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        st.markdown(f"""
-        <div class="category-info">
-            <div class="category-name">{cat['name']}</div>
-            <div class="category-code">الكود: {cat['code']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        btn1, btn2, btn3 = st.columns(3)
-        with btn1:
-            if st.button("✏️", key=f"edit_{cat['id']}", help="تعديل"):
-                st.session_state.edit_id = cat['id']
+    # عرض بطاقة المجموعة
+    with st.container():
+        col1, col2, col3 = st.columns([3, 1, 1])
+        
+        with col1:
+            st.markdown(f"""
+            <div class="category-info">
+                <div class="category-name">{cat['name']}</div>
+                <div class="category-code">الكود: {cat['code']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            if st.button("✏️ تعديل", key=f"edit_{cat['id']}", use_container_width=True):
+                handle_edit(cat['id'])
                 st.rerun()
-        with btn2:
-            if st.button("🗑️", key=f"del_{cat['id']}", help="حذف"):
-                st.session_state.delete_id = cat['id']
+        
+        with col3:
+            if st.button("🗑️ حذف", key=f"del_{cat['id']}", use_container_width=True):
+                handle_delete(cat['id'])
                 st.rerun()
-        with btn3:
-            if st.button("👁️", key=f"view_{cat['id']}", help="عرض"):
-                st.session_state.view_id = cat['id']
-                st.rerun()
+        
+        # زر العرض في صف منفصل على الجوال
+        if st.button("👁️ عرض", key=f"view_{cat['id']}", use_container_width=True):
+            handle_view(cat['id'])
+            st.rerun()
     
     # تعديل
     if st.session_state.edit_id == cat['id']:
