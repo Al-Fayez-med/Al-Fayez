@@ -47,15 +47,14 @@ st.markdown("""
     margin-bottom: 2rem;
 }
 .category-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background-color: white;
     border-radius: 12px;
     padding: 8px 12px;
     margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
 }
 .category-info {
     flex: 2;
@@ -72,7 +71,9 @@ st.markdown("""
 }
 .actions-group {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .action-btn {
     background-color: #1e3a8a;
@@ -82,7 +83,7 @@ st.markdown("""
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
-    min-width: 60px;
+    min-width: 55px;
     text-align: center;
 }
 .action-btn:hover {
@@ -131,64 +132,17 @@ if st.session_state.show_modal:
 # عرض المجموعات
 categories = load_categories()
 for cat in categories:
-    # عرض بطاقة المجموعة
-    with st.container():
-        col_info, col_buttons = st.columns([2, 1])
-        
-        with col_info:
-            st.markdown(f'<div class="category-info"><div class="category-name">{cat["name"]}</div><div class="category-code">الكود: {cat["code"]}</div></div>', unsafe_allow_html=True)
-        
-        with col_buttons:
-            btn_col1, btn_col2, btn_col3 = st.columns(3)
-            with btn_col1:
-                if st.button("✏️ تعديل", key=f"edit_btn_{cat['id']}", use_container_width=True):
-                    st.session_state.edit_id = cat['id']
-            with btn_col2:
-                if st.button("🗑️ حذف", key=f"del_btn_{cat['id']}", use_container_width=True):
-                    st.session_state.delete_id = cat['id']
-            with btn_col3:
-                if st.button("👁️ عرض", key=f"view_btn_{cat['id']}", use_container_width=True):
-                    st.session_state.open_action = f"view_{cat['id']}"
-        
-        # تعديل
-        if st.session_state.edit_id == cat['id']:
-            new_name = st.text_input("اسم جديد", value=cat['name'], key=f"edit_input_{cat['id']}")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("💾 حفظ", key=f"save_edit_{cat['id']}"):
-                    db.collection("categories").document(cat['id']).update({"name": new_name})
-                    st.session_state.edit_id = None
-                    st.rerun()
-            with col2:
-                if st.button("❌ إلغاء", key=f"cancel_edit_{cat['id']}"):
-                    st.session_state.edit_id = None
-                    st.rerun()
-        
-        # حذف
-        if st.session_state.delete_id == cat['id']:
-            st.warning(f"⚠️ هل تريد حذف '{cat['name']}'؟")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("✅ نعم", key=f"confirm_del_{cat['id']}"):
-                    db.collection("categories").document(cat['id']).delete()
-                    st.session_state.delete_id = None
-                    st.rerun()
-            with col2:
-                if st.button("❌ لا", key=f"cancel_del_{cat['id']}"):
-                    st.session_state.delete_id = None
-                    st.rerun()
-        
-        # عرض التفاصيل
-        if st.session_state.open_action == f"view_{cat['id']}":
-            st.markdown(f"""
-            <div style="background-color: #f3f4f6; border-radius: 8px; padding: 12px; margin-top: 8px;">
-                <p><strong>📋 تفاصيل المجموعة</strong></p>
-                <p>الاسم: {cat['name']}</p>
-                <p>الكود: {cat['code']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("🔙 إغلاق", key=f"close_view_{cat['id']}"):
-                st.session_state.open_action = None
-                st.rerun()
-        
-        st.divider()
+    # عرض بطاقة المجموعة باستخدام HTML
+    st.markdown(f"""
+    <div class="category-card">
+        <div class="category-info">
+            <div class="category-name">{cat['name']}</div>
+            <div class="category-code">الكود: {cat['code']}</div>
+        </div>
+        <div class="actions-group">
+            <button class="action-btn" onclick="alert('تعديل {cat['name']}')">✏️ تعديل</button>
+            <button class="action-btn delete-btn" onclick="alert('حذف {cat['name']}')">🗑️ حذف</button>
+            <button class="action-btn" onclick="alert('عرض {cat['name']}')">👁️ عرض</button>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
