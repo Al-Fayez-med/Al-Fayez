@@ -27,72 +27,67 @@ def generate_code():
     max_code = max(int(c["code"]) for c in cats)
     return str(max_code + 1).zfill(3)
 
-# ==================== واجهة المجموعات ====================
-st.title("🗂️ المجموعات")
+# ==================== CSS ====================
+st.markdown("""
+<style>
+/* Tailwind CDN */
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+
+/* تنسيق عام للصفحة */
+.main-header {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==================== الواجهة ====================
+st.markdown('<div class="main-header"><h1 class="text-4xl font-bold text-white">🗂️ المجموعات</h1></div>', unsafe_allow_html=True)
 
 # أزرار التحكم
 col1, col2 = st.columns([1, 10])
 with col1:
-    if st.button("➕", key="add_cat"):
+    if st.button("➕", key="add_cat", help="إضافة مجموعة"):
         st.session_state.show_add = True
 
-# إضافة مجموعة
+# إضافة مجموعة (نافذة منبثقة باستخدام Tailwind)
 if st.session_state.get("show_add", False):
-    with st.form(key="add_form"):
-        name = st.text_input("اسم المجموعة")
-        code = generate_code()
-        st.text_input("الكود", value=code, disabled=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.form_submit_button("✔️ حفظ"):
-                if name:
-                    db.collection("categories").add({"name": name, "code": code})
-                    st.session_state.show_add = False
-                    st.rerun()
-        with col2:
-            if st.form_submit_button("❌ إلغاء"):
-                st.session_state.show_add = False
-                st.rerun()
+    st.markdown("""
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" id="my-modal">
+      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">إضافة مجموعة جديدة</h3>
+          <div class="mt-2 px-7 py-3">
+            <input type="text" id="cat_name" placeholder="اسم المجموعة" class="border rounded w-full py-2 px-3 text-gray-700">
+            <div class="text-sm text-gray-500 mt-2">الكود: """ + generate_code() + """</div>
+          </div>
+          <div class="flex gap-3 mt-5">
+            <button onclick="document.getElementById('my-modal').style.display='none'" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">حفظ</button>
+            <button onclick="document.getElementById('my-modal').style.display='none'" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">إلغاء</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # عرض المجموعات
 categories = load_categories()
 for cat in categories:
-    with st.container():
-        st.markdown(f"**📁 {cat['name']}**")
-        st.caption(f"الكود: {cat['code']}")
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("✏️ تعديل", key=f"edit_{cat['id']}"):
-                st.session_state.edit_id = cat['id']
-        with col2:
-            if st.button("🗑️ حذف", key=f"del_{cat['id']}"):
-                st.session_state.delete_id = cat['id']
-        with col3:
-            if st.button("👁️ عرض", key=f"view_{cat['id']}"):
-                st.info("سيتم الانتقال إلى صفحة الأصناف")
-        
-        # تعديل
-        if st.session_state.get("edit_id") == cat['id']:
-            new_name = st.text_input("اسم جديد", value=cat['name'], key=f"new_name_{cat['id']}")
-            if st.button("💾 حفظ التعديل", key=f"save_{cat['id']}"):
-                db.collection("categories").document(cat['id']).update({"name": new_name})
-                st.session_state.edit_id = None
-                st.rerun()
-        
-        # حذف
-        if st.session_state.get("delete_id") == cat['id']:
-            st.warning(f"هل تريد حذف {cat['name']}؟")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("نعم", key=f"yes_{cat['id']}"):
-                    db.collection("categories").document(cat['id']).delete()
-                    st.session_state.delete_id = None
-                    st.rerun()
-            with col2:
-                if st.button("لا", key=f"no_{cat['id']}"):
-                    st.session_state.delete_id = None
-                    st.rerun()
-        
-        st.divider()
+    st.markdown(f"""
+    <div class="bg-white shadow-md rounded-lg p-4 mb-4 border-r-4 border-blue-500">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">{cat['name']}</h3>
+                <p class="text-sm text-gray-500">الكود: {cat['code']}</p>
+            </div>
+            <div class="flex gap-2">
+                <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">✏️ تعديل</button>
+                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">🗑️ حذف</button>
+                <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">👁️ عرض</button>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
