@@ -29,8 +29,6 @@ def generate_code():
 # ==================== CSS ====================
 st.markdown("""
 <style>
-@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
-
 .main-header {
     text-align: center;
     padding: 2rem;
@@ -38,41 +36,29 @@ st.markdown("""
     border-radius: 1rem;
     margin-bottom: 2rem;
 }
-
-/* تنسيق زر المجموعة */
-.category-btn {
-    background-color: #3b82f6 !important;
-    color: white !important;
-    border-radius: 12px !important;
-    padding: 5px 15px !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    width: auto !important;
-    min-width: 150px !important;
-    text-align: center !important;
-    border: none !important;
-    cursor: pointer !important;
+.category-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1f2937;
 }
-
-/* تنسيق أزرار الإجراءات */
+.category-code {
+    font-size: 10px;
+    color: #6b7280;
+    margin-top: 2px;
+}
 .action-btn {
-    background-color: #1e3a8a !important;
-    color: white !important;
-    border-radius: 8px !important;
-    padding: 5px 12px !important;
-    font-size: 12px !important;
-    height: 30px !important;
-    width: auto !important;
-    min-width: 60px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    border: none !important;
-    cursor: pointer !important;
+    background-color: #1e3a8a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    width: 100%;
+    white-space: nowrap;
 }
-
 .action-btn:hover {
-    background-color: #2563eb !important;
+    background-color: #2563eb;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -122,46 +108,47 @@ if st.session_state.show_modal:
 categories = load_categories()
 for cat in categories:
     with st.container():
-        # زر المجموعة
-        if st.button(f"📁 {cat['name']}", key=f"group_{cat['id']}", use_container_width=False):
-            st.session_state.open_cat = cat['id'] if st.session_state.get("open_cat") != cat['id'] else None
-            st.rerun()
+        # صف واحد: اسم المجموعة (نصف الشاشة) + الأزرار (النصف الآخر)
+        col_name, col_edit, col_del, col_view = st.columns([6, 2, 2, 2])
         
-        # التفاصيل (تظهر عند النقر على زر المجموعة)
-        if st.session_state.get("open_cat") == cat['id']:
-            st.markdown(f'<div style="background-color: #1e3a8a; color: #94a3b8; padding: 5px 12px; border-radius: 8px; font-size: 12px; margin: 10px 0;">الكود: {cat["code"]}</div>', unsafe_allow_html=True)
-            
-            col1, col2, col3 = st.columns(3)
+        with col_name:
+            st.markdown(f'<div class="category-name">{cat["name"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="category-code">الكود: {cat["code"]}</div>', unsafe_allow_html=True)
+        
+        with col_edit:
+            if st.button("✏️ تعديل", key=f"edit_{cat['id']}", use_container_width=True):
+                st.session_state.edit_id = cat['id']
+                st.rerun()
+        
+        with col_del:
+            if st.button("🗑️ حذف", key=f"del_{cat['id']}", use_container_width=True):
+                st.session_state.delete_id = cat['id']
+                st.rerun()
+        
+        with col_view:
+            if st.button("👁️ عرض", key=f"view_{cat['id']}", use_container_width=True):
+                st.info(f"عرض تفاصيل المجموعة: {cat['name']}")
+        
+        # تعديل
+        if st.session_state.edit_id == cat['id']:
+            new_name = st.text_input("اسم جديد", value=cat['name'], key=f"new_name_{cat['id']}")
+            if st.button("💾 حفظ التعديل", key=f"save_edit_{cat['id']}"):
+                db.collection("categories").document(cat['id']).update({"name": new_name})
+                st.session_state.edit_id = None
+                st.rerun()
+        
+        # حذف
+        if st.session_state.delete_id == cat['id']:
+            st.warning(f"هل تريد حذف {cat['name']}؟")
+            col1, col2 = st.columns(2)
             with col1:
-                if st.button("✏️ تعديل", key=f"edit_{cat['id']}", use_container_width=True):
-                    st.session_state.edit_id = cat['id']
+                if st.button("نعم", key=f"yes_del_{cat['id']}"):
+                    db.collection("categories").document(cat['id']).delete()
+                    st.session_state.delete_id = None
                     st.rerun()
             with col2:
-                if st.button("🗑️ حذف", key=f"del_{cat['id']}", use_container_width=True):
-                    st.session_state.delete_id = cat['id']
+                if st.button("لا", key=f"no_del_{cat['id']}"):
+                    st.session_state.delete_id = None
                     st.rerun()
-            with col3:
-                if st.button("👁️ عرض", key=f"view_{cat['id']}", use_container_width=True):
-                    st.info(f"عرض تفاصيل المجموعة: {cat['name']}")
-            
-            # تعديل
-            if st.session_state.edit_id == cat['id']:
-                new_name = st.text_input("اسم جديد", value=cat['name'], key=f"new_name_{cat['id']}")
-                if st.button("💾 حفظ التعديل", key=f"save_edit_{cat['id']}"):
-                    db.collection("categories").document(cat['id']).update({"name": new_name})
-                    st.session_state.edit_id = None
-                    st.rerun()
-            
-            # حذف
-            if st.session_state.delete_id == cat['id']:
-                st.warning(f"هل تريد حذف {cat['name']}؟")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("نعم", key=f"yes_del_{cat['id']}"):
-                        db.collection("categories").document(cat['id']).delete()
-                        st.session_state.delete_id = None
-                        st.rerun()
-                with col2:
-                    if st.button("لا", key=f"no_del_{cat['id']}"):
-                        st.session_state.delete_id = None
-                        st.rerun()
+        
+        st.divider()
