@@ -50,6 +50,8 @@ st.markdown("""
     width: auto !important;
     min-width: 150px !important;
     text-align: center !important;
+    border: none !important;
+    cursor: pointer !important;
 }
 
 /* تنسيق أزرار الإجراءات */
@@ -82,13 +84,19 @@ st.markdown('<div class="main-header"><h1 class="text-4xl font-bold text-white">
 if "show_modal" not in st.session_state:
     st.session_state.show_modal = False
 
+if "edit_id" not in st.session_state:
+    st.session_state.edit_id = None
+
+if "delete_id" not in st.session_state:
+    st.session_state.delete_id = None
+
 # زر إضافة مجموعة
 col1, col2 = st.columns([1, 10])
 with col1:
     if st.button("➕", key="add_cat"):
         st.session_state.show_modal = True
 
-# النافذة المنبثقة
+# النافذة المنبثقة للإضافة
 if st.session_state.show_modal:
     with st.form(key="add_category_form"):
         st.markdown("### ➕ إضافة مجموعة جديدة")
@@ -114,17 +122,46 @@ if st.session_state.show_modal:
 categories = load_categories()
 for cat in categories:
     with st.container():
-        # زر المجموعة (أزرق)
-        st.markdown(f"""
-        <button class="category-btn" onclick="alert('تم فتح {cat['name']}')">
-            📁 {cat['name']}
-        </button>
-        <div style="margin-top: 10px; margin-bottom: 10px;">
-            <span style="background-color: #1e3a8a; color: #94a3b8; padding: 5px 12px; border-radius: 8px; font-size: 12px;">الكود: {cat['code']}</span>
-        </div>
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button class="action-btn" onclick="alert('تعديل {cat['name']}')">✏️ تعديل</button>
-            <button class="action-btn" onclick="alert('حذف {cat['name']}')">🗑️ حذف</button>
-            <button class="action-btn" onclick="alert('عرض {cat['name']}')">👁️ عرض</button>
-        </div>
-        """, unsafe_allow_html=True)
+        # زر المجموعة
+        if st.button(f"📁 {cat['name']}", key=f"group_{cat['id']}", use_container_width=False):
+            st.session_state.open_cat = cat['id'] if st.session_state.get("open_cat") != cat['id'] else None
+            st.rerun()
+        
+        # التفاصيل (تظهر عند النقر على زر المجموعة)
+        if st.session_state.get("open_cat") == cat['id']:
+            st.markdown(f'<div style="background-color: #1e3a8a; color: #94a3b8; padding: 5px 12px; border-radius: 8px; font-size: 12px; margin: 10px 0;">الكود: {cat["code"]}</div>', unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("✏️ تعديل", key=f"edit_{cat['id']}", use_container_width=True):
+                    st.session_state.edit_id = cat['id']
+                    st.rerun()
+            with col2:
+                if st.button("🗑️ حذف", key=f"del_{cat['id']}", use_container_width=True):
+                    st.session_state.delete_id = cat['id']
+                    st.rerun()
+            with col3:
+                if st.button("👁️ عرض", key=f"view_{cat['id']}", use_container_width=True):
+                    st.info(f"عرض تفاصيل المجموعة: {cat['name']}")
+            
+            # تعديل
+            if st.session_state.edit_id == cat['id']:
+                new_name = st.text_input("اسم جديد", value=cat['name'], key=f"new_name_{cat['id']}")
+                if st.button("💾 حفظ التعديل", key=f"save_edit_{cat['id']}"):
+                    db.collection("categories").document(cat['id']).update({"name": new_name})
+                    st.session_state.edit_id = None
+                    st.rerun()
+            
+            # حذف
+            if st.session_state.delete_id == cat['id']:
+                st.warning(f"هل تريد حذف {cat['name']}؟")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("نعم", key=f"yes_del_{cat['id']}"):
+                        db.collection("categories").document(cat['id']).delete()
+                        st.session_state.delete_id = None
+                        st.rerun()
+                with col2:
+                    if st.button("لا", key=f"no_del_{cat['id']}"):
+                        st.session_state.delete_id = None
+                        st.rerun()
