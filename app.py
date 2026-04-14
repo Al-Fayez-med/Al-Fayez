@@ -38,7 +38,7 @@ if "view_id" not in st.session_state:
 if "open_category" not in st.session_state:
     st.session_state.open_category = None
 
-# ==================== CSS لتقليل المسافات ====================
+# ==================== CSS ====================
 st.markdown("""
 <style>
 .main-header {
@@ -48,7 +48,6 @@ st.markdown("""
     border-radius: 0.5rem;
     margin-bottom: 0.5rem;
 }
-/* تقليل المسافات بين العناصر */
 .block-container {
     padding-top: 0.5rem !important;
     padding-bottom: 0rem !important;
@@ -56,21 +55,21 @@ st.markdown("""
 .element-container {
     margin-bottom: 0rem !important;
 }
-/* زر المجموعة بدون مسافات */
 .stButton button {
-    padding: 4px 8px !important;
+    padding: 6px 10px !important;
     margin: 0px !important;
+    text-align: right !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
 }
-/* إزالة المسافات بين الأقسام */
 hr {
     margin: 4px 0px !important;
 }
-/* تقليل مسافات الحاوية */
-div[data-testid="stVerticalBlock"] > div {
-    padding: 0px 0px !important;
-}
-.category-row {
-    margin-bottom: 2px !important;
+.category-code {
+    font-size: 10px;
+    color: #bfdbfe;
+    margin-right: 8px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -111,42 +110,31 @@ categories = load_categories()
 for cat in categories:
     cat_id = cat['id']
     
-    # صف واحد: اسم المجموعة + الكود في سطر واحد
-    with st.container():
-        col1, col2, col3 = st.columns([6, 2, 1])
+    # زر المجموعة مع الكود كملحق داخل الزر
+    button_label = f"📁 {cat['name']} <span class='category-code'>({cat['code']})</span>"
+    
+    if st.button(button_label, key=f"cat_{cat_id}", use_container_width=True):
+        if st.session_state.open_category == cat_id:
+            st.session_state.open_category = None
+        else:
+            st.session_state.open_category = cat_id
+        st.rerun()
+    
+    # القائمة المنسدلة
+    if st.session_state.open_category == cat_id:
+        col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button(f"📁 {cat['name']}", key=f"cat_{cat_id}", use_container_width=True):
-                if st.session_state.open_category == cat_id:
-                    st.session_state.open_category = None
-                else:
-                    st.session_state.open_category = cat_id
+            if st.button("✏️ تعديل", key=f"edit_{cat_id}", use_container_width=True):
+                st.session_state.edit_id = cat_id
                 st.rerun()
         with col2:
-            st.markdown(f'<div style="font-size: 10px; color: #6b7280; padding-top: 8px;">{cat["code"]}</div>', unsafe_allow_html=True)
-        with col3:
-            if st.button("⋮", key=f"menu_{cat_id}", help="خيارات"):
-                if st.session_state.open_category == cat_id:
-                    st.session_state.open_category = None
-                else:
-                    st.session_state.open_category = cat_id
+            if st.button("🗑️ حذف", key=f"del_{cat_id}", use_container_width=True):
+                st.session_state.delete_id = cat_id
                 st.rerun()
-    
-    # القائمة المنسدلة (ثلاثة أزرار في صف واحد)
-    if st.session_state.open_category == cat_id:
-        with st.container():
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("✏️ تعديل", key=f"edit_{cat_id}", use_container_width=True):
-                    st.session_state.edit_id = cat_id
-                    st.rerun()
-            with col2:
-                if st.button("🗑️ حذف", key=f"del_{cat_id}", use_container_width=True):
-                    st.session_state.delete_id = cat_id
-                    st.rerun()
-            with col3:
-                if st.button("👁️ عرض", key=f"view_{cat_id}", use_container_width=True):
-                    st.session_state.view_id = cat_id
-                    st.rerun()
+        with col3:
+            if st.button("👁️ عرض", key=f"view_{cat_id}", use_container_width=True):
+                st.session_state.view_id = cat_id
+                st.rerun()
     
     # نافذة التعديل
     if st.session_state.edit_id == cat_id:
@@ -187,3 +175,5 @@ for cat in categories:
         if st.button("🔙 إغلاق", key=f"close_view_{cat_id}"):
             st.session_state.view_id = None
             st.rerun()
+    
+    st.divider()
