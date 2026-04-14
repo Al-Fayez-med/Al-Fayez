@@ -33,8 +33,8 @@ if "edit_id" not in st.session_state:
     st.session_state.edit_id = None
 if "delete_id" not in st.session_state:
     st.session_state.delete_id = None
-if "open_action" not in st.session_state:
-    st.session_state.open_action = None
+if "view_id" not in st.session_state:
+    st.session_state.view_id = None
 
 # ==================== CSS ====================
 st.markdown("""
@@ -133,16 +133,70 @@ if st.session_state.show_modal:
 categories = load_categories()
 for cat in categories:
     # عرض بطاقة المجموعة باستخدام HTML
-    st.markdown(f"""
-    <div class="category-card">
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.markdown(f"""
         <div class="category-info">
             <div class="category-name">{cat['name']}</div>
             <div class="category-code">الكود: {cat['code']}</div>
         </div>
-        <div class="actions-group">
-            <button class="action-btn" onclick="alert('تعديل {cat['name']}')">✏️ تعديل</button>
-            <button class="action-btn delete-btn" onclick="alert('حذف {cat['name']}')">🗑️ حذف</button>
-            <button class="action-btn" onclick="alert('عرض {cat['name']}')">👁️ عرض</button>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        btn1, btn2, btn3 = st.columns(3)
+        with btn1:
+            if st.button("✏️", key=f"edit_{cat['id']}", help="تعديل"):
+                st.session_state.edit_id = cat['id']
+                st.rerun()
+        with btn2:
+            if st.button("🗑️", key=f"del_{cat['id']}", help="حذف"):
+                st.session_state.delete_id = cat['id']
+                st.rerun()
+        with btn3:
+            if st.button("👁️", key=f"view_{cat['id']}", help="عرض"):
+                st.session_state.view_id = cat['id']
+                st.rerun()
+    
+    # تعديل
+    if st.session_state.edit_id == cat['id']:
+        new_name = st.text_input("اسم جديد", value=cat['name'], key=f"edit_input_{cat['id']}")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("💾 حفظ", key=f"save_edit_{cat['id']}"):
+                db.collection("categories").document(cat['id']).update({"name": new_name})
+                st.session_state.edit_id = None
+                st.rerun()
+        with col2:
+            if st.button("❌ إلغاء", key=f"cancel_edit_{cat['id']}"):
+                st.session_state.edit_id = None
+                st.rerun()
+    
+    # حذف
+    if st.session_state.delete_id == cat['id']:
+        st.warning(f"⚠️ هل تريد حذف '{cat['name']}'؟")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("✅ نعم", key=f"confirm_del_{cat['id']}"):
+                db.collection("categories").document(cat['id']).delete()
+                st.session_state.delete_id = None
+                st.rerun()
+        with col2:
+            if st.button("❌ لا", key=f"cancel_del_{cat['id']}"):
+                st.session_state.delete_id = None
+                st.rerun()
+    
+    # عرض
+    if st.session_state.view_id == cat['id']:
+        st.markdown(f"""
+        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 12px; margin-top: 8px;">
+            <p><strong>📋 تفاصيل المجموعة</strong></p>
+            <p>الاسم: {cat['name']}</p>
+            <p>الكود: {cat['code']}</p>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+        if st.button("🔙 إغلاق", key=f"close_view_{cat['id']}"):
+            st.session_state.view_id = None
+            st.rerun()
+    
+    st.divider()
