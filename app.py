@@ -29,7 +29,6 @@ def generate_code():
 # ==================== CSS ====================
 st.markdown("""
 <style>
-/* Tailwind CDN */
 @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
 
 .main-header {
@@ -38,6 +37,40 @@ st.markdown("""
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 1rem;
     margin-bottom: 2rem;
+}
+
+/* تنسيق زر المجموعة */
+.category-btn {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 5px 15px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    width: auto !important;
+    min-width: 150px !important;
+    text-align: center !important;
+}
+
+/* تنسيق أزرار الإجراءات */
+.action-btn {
+    background-color: #1e3a8a !important;
+    color: white !important;
+    border-radius: 8px !important;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    height: 30px !important;
+    width: auto !important;
+    min-width: 60px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+.action-btn:hover {
+    background-color: #2563eb !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -81,18 +114,17 @@ if st.session_state.show_modal:
 categories = load_categories()
 for cat in categories:
     with st.container():
+        # زر المجموعة (أزرق)
         st.markdown(f"""
-        <div class="bg-white shadow-md rounded-lg p-4 mb-4 border-r-4 border-blue-500">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800">{cat['name']}</h3>
-                    <p class="text-sm text-gray-500">الكود: {cat['code']}</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onclick="alert('تعديل')">✏️ تعديل</button>
-                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="alert('حذف')">🗑️ حذف</button>
-                    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="alert('عرض')">👁️ عرض</button>
-                </div>
-            </div>
+        <button class="category-btn" onclick="alert('تم فتح {cat['name']}')">
+            📁 {cat['name']}
+        </button>
+        <div style="margin-top: 10px; margin-bottom: 10px;">
+            <span style="background-color: #1e3a8a; color: #94a3b8; padding: 5px 12px; border-radius: 8px; font-size: 12px;">الكود: {cat['code']}</span>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="action-btn" onclick="alert('تعديل {cat['name']}')">✏️ تعديل</button>
+            <button class="action-btn" onclick="alert('حذف {cat['name']}')">🗑️ حذف</button>
+            <button class="action-btn" onclick="alert('عرض {cat['name']}')">👁️ عرض</button>
         </div>
         """, unsafe_allow_html=True)
